@@ -1,16 +1,28 @@
-# Flask-YAML-Config
+# Ordbok
 
-As your application grows, configuration can get a bit chaotic, especially if you have multiple versions (local, deployed, staging, etc.) Flask-YAML-Config brings order to that chaos.
+As your application grows, configuration can get a bit chaotic, especially if you have multiple versions (local, deployed, staging, etc.) Ordbok brings order to that chaos.
+
+Ordbok can be used to load abstractly to load configurations from YAML files into a Python dictionary, and also has a specfic setup for use with Flask. See [TODO](#todo) for plans to expand this.
 
 ## Installation
 
 Inside a [virtualenv](http://virtualenv.readthedocs.org/en/latest/) run
 
 ```
-pip install flask-yaml-config
+pip install ordbok
 ```
 
 ## Quickstart
+
+```
+from ordbok import Ordbok
+config = Ordbok()
+config.load()
+```
+
+Then, in your app root path, create a directory `config` and add two files `config.yml` and `local_config.yml`. See [Usage](#usage) for more detailed usage and [Example](#examples) for an example YAML configuration.
+
+## Quickstart with Flask
 
 In the file in which you initialize your `Flask` object, replace
 
@@ -18,7 +30,7 @@ In the file in which you initialize your `Flask` object, replace
 
 with
 
-```from flask.ext.yaml_config import Flask```
+```from ordbok import Flask```
 
 and update
 
@@ -28,7 +40,7 @@ to
 
 ```
 app = Flask(__name__)
-app.config.from_yaml()
+app.config.load()
 ```
 (or similar depending upon your setup).
 
@@ -41,7 +53,7 @@ See [Quickstart](#quickstart) for getting initially setup.
 ### Hierarchical Config Files
 
 #### YAML Config Files
-As your Flask application grows, you may find that your configuration is coming from all over the place, and it may be difficult to understand what is overriding what. Flask-Yaml-Config adds a strict order of operations as to how the config should be loaded, and tools to specify that a certain variable should be specified later in the chain.
+As your Flask application grows, you may find that your configuration is coming from all over the place, and it may be difficult to understand what is overriding what. Ordbok adds a strict order of operations as to how the config should be loaded, and tools to specify that a certain variable should be specified later in the chain.
 
 The default configurations has three configuration steps:
   1. `config.yml`
@@ -50,10 +62,10 @@ The default configurations has three configuration steps:
 
 YAML already has some structure like this, but the idea behind the `local_config.yml` is for settings that may be dependent of a developers own configuration.
 
-Variables that show up in multiple files will assume the value in the later declaration. Moreover, variables can be declared in earlier files such that they must be found in later file or the environment. This works with the `<near_miss_key>`, for example setting `KEY: '<near_miss_key>_local_config'` in `config.yml` will raise an exception if `KEY` isn't specified in `local_config.yml`.
+Variables that show up in multiple files will assume the value in the later declaration. Moreover, variables can be declared in earlier files such that they must be found in later file or the environment. This works with the `<near_miss_key>`, which defaults to `ordbok` but can be specified. For example setting `KEY: 'ordbok_local_config'` in `config.yml` will raise an exception if `KEY` isn't specified in `local_config.yml`.
 
 ####Environmental Config
-The environment works mostly like the YAML config files, and is the last in the hierarchy chain of loading config variables. We take every environmental variable of the form `<NEAR_MISS_KEY>_KEY` in the environment (where `<NEAR_MISS_KEY>` is the uppercase of `<near_miss_key>`), and add it to the Flask config. Similar to the files, setting `KEY: '<near_miss_key>_env'` in any of the YAML config files will raise an exception if `<NEAR_MISS_KEY>_KEY` isn't specified in the environment.
+The environment works mostly like the YAML config files, and is the last in the hierarchy chain of loading config variables. We take every environmental variable of the form `ORDBOK_KEY` in the environment and add `'KEY'` to the Ordbok config dict. Similar to the files, setting `KEY: 'ordbok_env'` in any of the YAML config files will raise an exception if `ORDBOK_KEY` isn't specified in the environment.
 
 
 ### Defaults
@@ -62,8 +74,8 @@ These are all optional kwargs that can be use with `app.config.from_yaml(**kwarg
   - `config_path` defaults to `config` and looks for files in this directory relative to the `app.root_dir`.
   - `custom_config_files` defaults to `['config.yml', 'local_config.yml']`. If you like to change these or add more, specify them as a string of the filename here. As above, earlier files will be overridden by later files.
   - `include_env` defaults to `True`, but if set to `False`, the environment will not be checked by the `config.from_yaml()` method.
-  - `near_miss_key` is used to avoid conflicts of real configuration values and defaults to `'whynotzoidberg'`. (You'll likely want to override this if you're not a ravid Futurama fan. However, you probably don't want to set this to `'flask'` or `'app'`.)
-  - `default_environment` defaults to `development`. If `config['ENVIRONMENT']` is unset, we look in the environment for `<NEAR_MISS_KEY>_ENVIRONMENT` (where `<NEAR_MISS_KEY>` is the uppercase of your `near_miss_key`.) If this is unset, the `default_environment` is used.
+  - `near_miss_key` is used to avoid conflicts of real configuration values and defaults to `'ordbok'`. (If you override this, you'll want to avoid using something like `'flask'` or `'app'`.)
+  - `default_environment` defaults to `development`. If `config['ENVIRONMENT']` is unset, we look in the environment for `ORDBOK_ENVIRONMENT`. If this is unset, the `default_environment` is used. (This is largely a Flask pattern, and abstracting this out to a default of `None` for the general case and `development` for Flask is on the [TODO](#todo).)
 
 ## Examples
 
@@ -71,11 +83,11 @@ These are all optional kwargs that can be use with `app.config.from_yaml(**kwarg
 `app/__init__.py`:
 
 ```
-from flask.ext.flask_yaml_config import Flask
+from ordbok import Flask
 
 def create_app():
     app = Flask(__name__)
-    app.config.from_yaml()
+    app.config.load()
     return app
 
 if __name__ == "__main__":
@@ -92,11 +104,11 @@ COMMON: &common
 DEVELOPMENT: &development
   <<: *common
   DEBUG: True
-  SQLALCHEMY_DATABASE_URL: 'whynotzoidberg_local_config'
+  SQLALCHEMY_DATABASE_URL: 'ordbok_local_config'
 
 PRODUCTION:
   <<: *common
-  SECRET_KEY: 'whynotzoidberg_env'
+  SECRET_KEY: 'ordbok_env_config'
   SQLALCHEMY_DATABASE_URL: 'postgres://user:password@localhost:5432/database'
 
 ```
@@ -122,8 +134,8 @@ ran with `python app/__init__.py` will run a Flask app with the following config
 and ran with (in bash):
 
 ```
-export WHYNOTZOIDBERG_ENVIRONMENT=PRODUCTION
-export WHYNOTZOIDBERG_SECRET_KEY=7a1fa63d-f33a-11e3-aab5-b88d12179d58
+export ORDBOK_ENVIRONMENT=PRODUCTION
+export ORDBOK_SECRET_KEY=7a1fa63d-f33a-11e3-aab5-b88d12179d58
 python app/__init__.py
 ```
 
@@ -138,13 +150,16 @@ will run a Flask app with the following configuration*:
 ```
 *Note: These are not complete configurations; Flask adds a set of defaults on it's own. These only represent the values set from the config files and the environment.
 
-By setting `SQLALCHEMY_DATABASE_URL: 'whynotzoidberg_local_config'` and `SECRET_KEY: 'whynotzoidberg_env'` in our `config/config.yml` file, we would raise an exception if those values were not found in `config/local_config.yml` and the environment, respectively.
+By setting `SQLALCHEMY_DATABASE_URL: 'ordbok_local_config'` and `SECRET_KEY: 'ordbok_env'` in our `config/config.yml` file, we would raise an exception if those values were not found in `config/local_config.yml` and the environment, respectively.
 
 
 ## TODO
 
  - Add advanced Example to README.md
- - Add ability to specify where to look in environment for a variable (e.g. you want to look for `KEY` at `HEROKU_PROVIDED_VALUE` rather than `<NEAR_MISS_KEY>_KEY` in the environment.
+ - Abstract away from Flask patterns in the general case.
+ - Add support for more file types (JSON, maybe XML?)
+ - Add integrated support for other frameworks (Pyramid, Django, etc.)
+ - Add ability to specify where to look in environment for a variable (e.g. you want to look for `KEY` at `HEROKU_PROVIDED_VALUE` rather than `ORDBOK_KEY` in the environment.
  - Add a private config file type, where an encrypted version of the file could exist in the repo, and a password could be set in the environment where the private keys are used. Will require integration with Flask-Script to provide methods to decrypt locally with the password, edit keys, and re-encrypt.
 
 

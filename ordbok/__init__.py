@@ -41,12 +41,12 @@ class ConfigFile(object):
             if value in config_files_lookup.keys():
                 if value == self.keyword:
                     raise Exception(
-                        'Cannot require {} required environmental '
+                        'Cannot require {} required Ordbok config '
                         'variables in their own file.'.format(
                             self.filename))
                 elif config_files_lookup[value].loaded:
                     raise Exception(
-                        'Cannot specify {0} required environmental '
+                        'Cannot specify {0} required Ordbok config '
                         'variables in {1}, {0} is loaded before '
                         '{1}.'.format(
                             config_files_lookup[value].filename,
@@ -69,13 +69,14 @@ class ConfigEnv(ConfigFile):
         self.config = config
         self.keyword = '{}_env_config'.format(self.config.near_miss_key)
         self.required_vars = []
+        self.loaded = False
 
     def _load(self, _):
-        environ = {key.lstrip(self.config.near_miss_key.upper()): value
+        environ = {key.lstrip(self.config.near_miss_key.upper()+'_'): value
                    for key, value in os.environ.iteritems()
                    if key.startswith(self.config.near_miss_key.upper())
                    and value}
-        for key, value in environ.iteritems:
+        for key, value in environ.iteritems():
             self.config[key] = value
 
     def _check_required_vars(self):
@@ -86,18 +87,13 @@ class ConfigEnv(ConfigFile):
                     'but was not found.'.format(key))
 
 
-
-class Config(BaseConfig):
-    """
-    Extented version of the builtin Flask `Config` that implements
-    a `from_yaml` method so that config varibables can be defined there.
-    """
-    def from_yaml(self,
-                  config_path='config',
-                  custom_config_files=None,
-                  include_env=True,
-                  near_miss_key='whynotzoidberg',
-                  default_environment='development'):
+class Ordbok(dict):
+    def load(self,
+             config_path='config',
+             custom_config_files=None,
+             include_env=True,
+             near_miss_key='ordbok',
+             default_environment='development'):
         self.near_miss_key = near_miss_key
         self.config_path = config_path
         if not self.get('ENVIRONMENT'):
@@ -120,12 +116,20 @@ class Config(BaseConfig):
             config_file.load(config_files_lookup)
 
 
+class OrdbokFlaskConfig(BaseConfig, Ordbok):
+    """
+    Extented version of the builtin Flask `Config` that inherits
+    a `from_yaml` method from Ordbokso that config varibables can
+    be defined there.
+    """
+    pass
+
 class Flask(BaseFlask):
     """
     Extened version of `Flask` that implements the custom config class
     defined above.
     """
-    config_class = Config
+    config_class = OrdbokFlaskConfig
 
     def make_config(self, instance_relative=False):
         root_path = self.root_path

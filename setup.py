@@ -1,9 +1,9 @@
 """
-flask-yaml-config
+Ordbok
 -----------------
 
-Bring order to the chaos of Flask configuration
-using a hierarchy of yaml files and your environment.
+Bring order to the chaos of configuration
+using a hierarchy of cofiguration files and your environment.
 """
 from setuptools import setup
 
@@ -15,23 +15,26 @@ setup(
     license='MIT',
     author='Erik Taubeneck',
     author_email='erik.taubeneck@gmail.com',
-    description='Bring order to the chaos of Flask configuration.',
+    description='Bring order to the chaos of configuration.',
     long_description=__doc__,
     py_modules=['ordbok'],
     zip_safe=False,
     include_package_data=True,
     playforms='any',
     install_requires=[
-        'Flask',
         'pyyaml'
     ],
     classifiers=[
+        'Development Status :: 3 - Alpha',
+        'Environment :: Plugins',
         'Environment :: Web Environment',
+        'Framework :: Flask',
         'Intended Audience :: Developers',
-        'License :: MIT',
+        'License :: OSI Approved :: MIT License',
+        'Natural Language :: English ',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
-        'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
+        'Topic :: Software Development :: Build Tools',
         'Topic :: Software Development :: Libraries :: Python Modules'
     ]
 )
