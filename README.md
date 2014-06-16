@@ -30,7 +30,7 @@ In the file in which you initialize your `Flask` object, replace
 
 with
 
-```from ordbok import Flask```
+```from ordbok.flask_helper import Flask```
 
 and update
 
@@ -79,11 +79,11 @@ These are all optional kwargs that can be use with `app.config.from_yaml(**kwarg
 
 ## Examples
 
-### Basic Example
+### Basic Flask Example
 `app/__init__.py`:
 
 ```
-from ordbok import Flask
+from ordbok.flask_helper import Flask
 
 def create_app():
     app = Flask(__name__)
