@@ -2,7 +2,12 @@
 
 As your application grows, configuration can get a bit chaotic, especially if you have multiple versions (local, deployed, staging, etc.) Ordbok brings order to that chaos.
 
-Ordbok can be used to load abstractly to load configurations from YAML files into a Python dictionary, and also has a specfic setup for use with Flask. See [TODO](#todo) for plans to expand this.
+Ordbok abstracts the loading of a configuration from YAML files into a Python dictionary, and also has a specific setup for use with Flask. See [TODO](#todo) for plans to expand this.
+
+![Svenska Akademiens ordbok](http://fc01.deviantart.net/fs70/i/2011/048/b/1/svenska_akademiens_ordbok_by_droemmaskin-d39rta7.jpg)
+_<a href="http://droemmaskin.deviantart.com/art/Svenska-Akademiens-ordbok-197812735">Svenska Akademiens ordbok</a> by <span class="username-with-symbol u"><a class="u regular username" href="http://droemmaskin.deviantart.com/">droemmaskin</a><span class="user-symbol regular" data-quicktip-text="" data-show-tooltip="" data-gruser-type="regular"></span></span> on <a href="http://www.deviantart.com">deviantART</a>. Provided under [Attribution-NonCommercial-ShareAlike 3.0 Unported](http://creativecommons.org/licenses/by-nc-sa/3.0/legalcode)_
+
+
 
 ## Installation
 
@@ -162,6 +167,10 @@ By setting `SQLALCHEMY_DATABASE_URL: 'ordbok_local_config'` and `SECRET_KEY: 'or
  - Add ability to specify where to look in environment for a variable (e.g. you want to look for `KEY` at `HEROKU_PROVIDED_VALUE` rather than `ORDBOK_KEY` in the environment.
  - Add a private config file type, where an encrypted version of the file could exist in the repo, and a password could be set in the environment where the private keys are used. Will require integration with Flask-Script to provide methods to decrypt locally with the password, edit keys, and re-encrypt.
 
+
+## Contributing
+
+If anything on the TODO list looks like something you'd like to take on, go ahead and fork the project and submit a Pull Request. For other features, please first open an issue proposing the feature/change. Pull Requests should include tests covering the changes/features being proposed.
 
 #LICENSE
 MIT License
