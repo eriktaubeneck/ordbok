@@ -1,2 +1,5 @@
 venv
 .coverage
+build
+dist
+ordbok.egg-info

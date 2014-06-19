@@ -11,6 +11,7 @@ class OrdbokFlaskConfig(BaseConfig, Ordbok):
     """
     pass
 
+
 class Flask(BaseFlask):
     """
     Extened version of `Flask` that implements the custom config class
