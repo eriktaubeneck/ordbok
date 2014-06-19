@@ -42,8 +42,13 @@ class ConfigFile(object):
                     '{} config key in {} must be uppercase.'.format(
                         key, self.filename)
                 )
-            if value in config_files_lookup.keys():
-                if value == self.keyword:
+            if isinstance(value, basestring) and value.startswith('ordbok'):
+                if value not in config_files_lookup.keys():
+                    raise Exception(
+                        '{0} is required to be specified in {1} '
+                        'but {1} was not registered with Ordbok'.format(
+                            key, self.config_file_path))
+                elif value == self.keyword:
                     raise Exception(
                         'Cannot require {} required Ordbok config '
                         'variables in their own file.'.format(
