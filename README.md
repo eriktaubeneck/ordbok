@@ -170,7 +170,23 @@ By setting `SQLALCHEMY_DATABASE_URL: 'ordbok_local_config'` and `SECRET_KEY: 'or
 
 ## Contributing
 
-If anything on the TODO list looks like something you'd like to take on, go ahead and fork the project and submit a Pull Request. For other features, please first open an issue proposing the feature/change. Pull Requests should include tests covering the changes/features being proposed.
+If anything on the TODO list looks like something you'd like to take on, go
+ahead and fork the project and submit a Pull Request. For other features,
+please first open an issue proposing the feature/change.
+
+### Environment
+
+To hack on ordbok, make sure to install the development requirements in your
+virtual environment.
+
+`pip install -r dev_requirements.txt`
+
+### Tests
+
+Pull Requests should include tests covering the changes/features being
+proposed.  To run the test suite, simply run:
+
+`nosetests`
 
 #LICENSE
 MIT License

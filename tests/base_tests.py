@@ -27,12 +27,30 @@ PRODUCTION:
     'local_config.yml': """
 SQLALCHEMY_DATABASE_URL: 'sqlite:///tmp/database.db'
 SQLALCHEMY_ECHO: True
+""",
+    'copied_local_settings_config.yml': """
+SQLALCHEMY_DATABASE_URL = 'sqlite:///tmp/database.db'
+SQLALCHEMY_ECHO = True
+""",
+    'bad_yaml_local_settings_config.yml': """
+SQLALCHEMY_DATABASE_URL: 'sqlite:///tmp/database.db'
+SQLALCHEMY_ECHO = True
 """
 }
 
 fudged_config_no_local_file = {
     key: value for key, value in fudged_config_files.iteritems()
     if key == 'config.yml'
+}
+
+fudged_config_copied_local_settings = {
+    key: value for key, value in fudged_config_files.iteritems()
+    if key in ('config.yml', 'copied_local_settings.yml')
+}
+
+fudged_config_bad_yaml_local_settings = {
+    key: value for key, value in fudged_config_files.iteritems()
+    if key in ('config.yml', 'bad_yaml_local_settings.yml')
 }
 
 patched_environ = {
@@ -80,6 +98,24 @@ class OrdbokTestCase(unittest.TestCase):
         self.assertEquals(self.ordbok['SQLALCHEMY_DATABASE_URL'],
                           'postgres://user:password@localhost:5432/database')
         self.assertFalse(self.ordbok.get('SQLALCHEMY_ECHO'))
+
+    @unittest.skip('TODO')
+    @fudge.patch('__builtin__.open')
+    def test_ordbok_copied_local_settings(self, fudged_open):
+        fudged_open.is_callable().calls(fake_file_factory(
+            fudged_config_copied_local_settings))
+        with self.assertRaises(TypeError):
+            self.ordbok.load(custom_config_files=[
+                'config.yml', 'copied_local_settings_config.yml'])
+
+    @unittest.skip('TODO')
+    @fudge.patch('__builtin__.open')
+    def test_ordbok_bad_yaml_local_settings(self, fudged_open):
+        fudged_open.is_callable().calls(fake_file_factory(
+            fudged_config_copied_local_settings))
+        with self.assertRaises(TypeError):
+            self.ordbok.load(custom_config_files=[
+                'config.yml', 'bad_yaml_local_settings_config.yml'])
 
     def test_flask_helper(self):
         app = Flask(__name__)

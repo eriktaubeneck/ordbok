@@ -29,6 +29,12 @@ class ConfigFile(object):
         c = self._load_yaml()
         if not c:
             return
+
+        if not isinstance(c, dict):
+            raise TypeError(u'YAML file {} did not load as a dict.  Please '
+                            u'check its formatting.'.format(
+                                self.config_file_path))
+
         c = c.get(self.config['ENVIRONMENT'].upper(), c)
         for key, value in c.iteritems():
             if not key.isupper():
@@ -99,7 +105,7 @@ class Ordbok(dict):
                 '{}_ENVIRONMENT'.format(self.near_miss_key.upper()),
                 default_environment).lower()
 
-        if not getattr(self, 'root_path'):
+        if not getattr(self, 'root_path', None):
             self.root_path = os.getcwd()
 
         if not custom_config_files:
