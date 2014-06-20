@@ -53,7 +53,9 @@ SQLALCHEMY_ECHO = True
 
 patched_environ = {
     'ORDBOK_ENVIRONMENT': 'production',
-    'ORDBOK_SECRET_KEY': '7a1fa63d-f33a-11e3-aab5-b88d12179d58'
+    'ORDBOK_SECRET_KEY': '7a1fa63d-f33a-11e3-aab5-b88d12179d58',
+    'ORDBOK_TEST_BOOLEAN': 'True',
+    'ORDBOK_TEST_INT': '42'
 }
 
 
@@ -93,6 +95,8 @@ class OrdbokTestCase(unittest.TestCase):
         self.assertEquals(self.ordbok['ENVIRONMENT'], 'production')
         self.assertEquals(self.ordbok['SECRET_KEY'],
                           '7a1fa63d-f33a-11e3-aab5-b88d12179d58')
+        self.assertEquals(self.ordbok['TEST_BOOLEAN'], True)
+        self.assertEquals(self.ordbok['TEST_INT'], 42)
         self.assertFalse(self.ordbok['DEBUG'])
         self.assertEquals(self.ordbok['SQLALCHEMY_DATABASE_URL'],
                           'postgres://user:password@localhost:5432/database')
