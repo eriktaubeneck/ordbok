@@ -9,7 +9,7 @@ from setuptools import setup
 
 setup(
     name='ordbok',
-    version='0.1.2',
+    version='0.1.3',
     packages=['ordbok'],
     url='http://github.com/alphaworksinc/ordbok',
     license='MIT',

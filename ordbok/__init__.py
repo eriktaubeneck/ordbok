@@ -86,7 +86,7 @@ class ConfigEnv(ConfigFile):
                    if key.startswith(self.config.near_miss_key.upper())
                    and value}
         for key, value in environ.iteritems():
-            self.config[key] = value
+            self.config[key] = yaml.load(value)
 
     def _check_required_vars(self):
         for key in self.required_vars:
