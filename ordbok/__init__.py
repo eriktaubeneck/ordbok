@@ -1,5 +1,13 @@
 import os
 import yaml
+import sys
+
+
+def is_str_or_unicode(s):
+    if sys.version < '3':
+        return isinstance(s, basestring)
+    else:
+        return isinstance(s, str)
 
 
 class ConfigFile(object):
@@ -36,13 +44,13 @@ class ConfigFile(object):
                                 self.config_file_path))
 
         c = c.get(self.config['ENVIRONMENT'].upper(), c)
-        for key, value in c.iteritems():
+        for key, value in c.items():
             if not key.isupper():
                 raise Exception(
                     '{} config key in {} must be uppercase.'.format(
                         key, self.filename)
                 )
-            if isinstance(value, basestring) and value.startswith('ordbok'):
+            if is_str_or_unicode(value) and value.startswith('ordbok'):
                 if value not in config_files_lookup.keys():
                     raise Exception(
                         '{0} is required to be specified in {1} '
@@ -82,10 +90,10 @@ class ConfigEnv(ConfigFile):
 
     def _load(self, _):
         environ = {key.lstrip(self.config.near_miss_key.upper()+'_'): value
-                   for key, value in os.environ.iteritems()
+                   for key, value in os.environ.items()
                    if key.startswith(self.config.near_miss_key.upper())
                    and value}
-        for key, value in environ.iteritems():
+        for key, value in environ.items():
             self.config[key] = yaml.load(value)
 
     def _check_required_vars(self):
