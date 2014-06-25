@@ -20,7 +20,7 @@ setup(
     py_modules=['ordbok'],
     zip_safe=False,
     include_package_data=True,
-    playforms='any',
+    platforms='any',
     install_requires=[
         'pyyaml'
     ],

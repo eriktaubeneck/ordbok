@@ -1,5 +1,11 @@
 # Ordbok
 
+[![Build Status](https://travis-ci.org/alphaworksinc/ordbok.svg?branch=master)](https://travis-ci.org/alphaworksinc/ordbok)
+[![Coverage Status](https://coveralls.io/repos/alphaworksinc/ordbok/badge.png?branch=master)](https://coveralls.io/r/alphaworksinc/ordbok?branch=master)
+[![Latest Version](https://pypip.in/version/ordbok/badge.png)](https://pypi.python.org/pypi/ordbok/)
+[![Downloads](https://pypip.in/download/ordbok/badge.png)](https://pypi.python.org/pypi/ordbok/)
+[![License](https://pypip.in/license/ordbok/badge.png)](https://pypi.python.org/pypi/ordbok/)
+
 As your application grows, configuration can get a bit chaotic, especially if you have multiple versions (local, deployed, staging, etc.) Ordbok brings order to that chaos.
 
 Ordbok abstracts the loading of a configuration from YAML files into a Python dictionary, and also has a specific setup for use with Flask. See [TODO](#todo) for plans to expand this.
