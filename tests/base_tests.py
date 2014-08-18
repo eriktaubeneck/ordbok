@@ -111,6 +111,18 @@ class OrdbokTestCase(unittest.TestCase):
         self.assertFalse(self.ordbok.get('SQLALCHEMY_ECHO'))
 
     @fudge.patch(open_function_string)
+    def test_ordbok_find_in_local(self, fudged_open):
+        '''
+        Test that Ordbok raises an Exception when a value is set to be found
+        in the local_config.yml file, but the local_config.yml doesn't have the
+        value.
+        '''
+        fudged_open.is_callable().calls(
+            fake_file_factory(fudged_config_no_local_file))
+        with self.assertRaises(Exception):
+            self.ordbok.load()
+
+    @fudge.patch(open_function_string)
     def test_ordbok_copied_local_settings(self, fudged_open):
         fudged_open.is_callable().calls(fake_file_factory(
             fudged_copied_config_files))
