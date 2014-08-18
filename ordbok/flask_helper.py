@@ -6,10 +6,13 @@ from flask import Flask as BaseFlask, Config as BaseConfig
 class OrdbokFlaskConfig(BaseConfig, Ordbok):
     """
     Extented version of the builtin Flask `Config` that inherits
-    a `from_yaml` method from Ordbokso that config varibables can
-    be defined there.
+    a `from_yaml` method from Ordbok so that config varibables
+    can be defined there.
     """
-    pass
+
+    @property
+    def config_cwd(self):
+        self.root_path
 
 
 class Flask(BaseFlask):

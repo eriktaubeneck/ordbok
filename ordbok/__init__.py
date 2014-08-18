@@ -18,7 +18,7 @@ class ConfigFile(object):
             self.config.near_miss_key, os.path.splitext(self.filename)[0])
         self.required_vars = []
         self.config_file_path = os.path.join(
-            self.config.root_path, self.config.config_path, self.filename)
+            self.config.config_cwd, self.config.config_dir, self.filename)
         self.loaded = False
 
     def load(self, config_files_lookup):
@@ -105,27 +105,40 @@ class ConfigEnv(ConfigFile):
 
 
 class Ordbok(dict):
-    def load(self,
-             config_path='config',
-             custom_config_files=None,
-             include_env=True,
-             near_miss_key='ordbok',
-             default_environment='development'):
-        self.near_miss_key = near_miss_key
-        self.config_path = config_path
+    def __init__(self, config_dir='config', custom_config_files=None,
+                 include_env=True, near_miss_key='ordbok',
+                 default_environment='development', **kwargs):
+
+        self.custom_config_files = ['config.yml', 'local_config.yml']
+        self.update_defaults(config_dir=config_dir,
+                             custom_config_files=custom_config_files,
+                             include_env=include_env,
+                             near_miss_key=near_miss_key,
+                             default_environment=default_environment)
+        return super(Ordbok, self).__init__(**kwargs)
+
+    def update_defaults(self, **kwargs):
+        self.config_dir = kwargs.get('config_dir') or self.config_dir
+        self.custom_config_files = (kwargs.get('custom_config_files') or
+                                    self.custom_config_files)
+        self.include_env = kwargs.get('include_env') or self.include_env
+        self.near_miss_key = kwargs.get('near_miss_key') or self.near_miss
+        self.default_environment = (kwargs.get('default_environment') or
+                                    self.default_environment)
+
+    @property
+    def config_cwd(self):
+        return os.getcwd()
+
+    def load(self):
         if not self.get('ENVIRONMENT'):
             self['ENVIRONMENT'] = os.environ.get(
                 '{}_ENVIRONMENT'.format(self.near_miss_key.upper()),
-                default_environment).lower()
+                self.default_environment).lower()
 
-        if not getattr(self, 'root_path', None):
-            self.root_path = os.getcwd()
+        config_files = [ConfigFile(f, self) for f in self.custom_config_files]
 
-        if not custom_config_files:
-            custom_config_files = ['config.yml', 'local_config.yml']
-        config_files = [ConfigFile(f, self) for f in custom_config_files]
-
-        if include_env:
+        if self.include_env:
             config_files.append(ConfigEnv(self))
 
         config_files_lookup = {cf.keyword: cf for cf in config_files}

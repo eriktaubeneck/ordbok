@@ -78,6 +78,7 @@ def fake_file_factory(fudged_config_files):
         yield StringIO(content)
     return fake_file
 
+
 class OrdbokTestCase(unittest.TestCase):
     def setUp(self):
         self.ordbok = Ordbok()

@@ -80,13 +80,13 @@ The environment works mostly like the YAML config files, and is the last in the 
 
 
 ### Defaults
-These are all optional kwargs that can be use with `app.config.from_yaml(**kwargs)`.
+Generally when using Ordbok, these following kwargs can be supplied at initialization. However when working with Flask, initialization of the config happens internally, so a helper method `app.config.update_defaults()` is provided. This must be called before `app.config.load()` to have any effect.
 
-  - `config_path` defaults to `config` and looks for files in this directory relative to the `app.root_dir`.
+  - `config_path` defaults to `config` and looks for files in this directory relative to the current working directory (or the `app.root_dir` in Flask).
   - `custom_config_files` defaults to `['config.yml', 'local_config.yml']`. If you like to change these or add more, specify them as a string of the filename here. As above, earlier files will be overridden by later files.
-  - `include_env` defaults to `True`, but if set to `False`, the environment will not be checked by the `config.from_yaml()` method.
+  - `include_env` defaults to `True`, but if set to `False`, the environment will not be checked by the `config.load()` method.
   - `near_miss_key` is used to avoid conflicts of real configuration values and defaults to `'ordbok'`. (If you override this, you'll want to avoid using something like `'flask'` or `'app'`.)
-  - `default_environment` defaults to `development`. If `config['ENVIRONMENT']` is unset, we look in the environment for `ORDBOK_ENVIRONMENT`. If this is unset, the `default_environment` is used. (This is largely a Flask pattern, and abstracting this out to a default of `None` for the general case and `development` for Flask is on the [TODO](#todo).)
+  - `default_environment` defaults to `development`. If `config['ENVIRONMENT']` is unset, we look in the environment for `ORDBOK_ENVIRONMENT`. If this is unset, the `default_environment` is used.
 
 ## Examples
 
@@ -167,7 +167,6 @@ By setting `SQLALCHEMY_DATABASE_URL: 'ordbok_local_config'` and `SECRET_KEY: 'or
 ## TODO
 
  - Add advanced Example to README.md
- - Abstract away from Flask patterns in the general case.
  - Add support for more file types (JSON, maybe XML?)
  - Add integrated support for other frameworks (Pyramid, Django, etc.)
  - Add ability to specify where to look in environment for a variable (e.g. you want to look for `KEY` at `HEROKU_PROVIDED_VALUE` rather than `ORDBOK_KEY` in the environment.
