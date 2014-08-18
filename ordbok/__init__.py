@@ -50,7 +50,8 @@ class ConfigFile(object):
                     '{} config key in {} must be uppercase.'.format(
                         key, self.filename)
                 )
-            if is_str_or_unicode(value) and value.startswith('ordbok'):
+            if (is_str_or_unicode(value) and
+                    value.startswith(self.config.near_miss_key)):
                 if value not in config_files_lookup.keys():
                     raise Exception(
                         '{0} is required to be specified in {1} '
@@ -71,7 +72,6 @@ class ConfigFile(object):
                 config_files_lookup[value].required_vars.append(key)
             else:
                 self.config[key] = value
-
 
     def _check_required_vars(self):
         for key in self.required_vars:
@@ -105,17 +105,19 @@ class ConfigEnv(ConfigFile):
 
 
 class Ordbok(dict):
-    def __init__(self, config_dir='config', custom_config_files=None,
-                 include_env=True, near_miss_key='ordbok',
-                 default_environment='development', **kwargs):
-
-        self.custom_config_files = ['config.yml', 'local_config.yml']
-        self.update_defaults(config_dir=config_dir,
-                             custom_config_files=custom_config_files,
-                             include_env=include_env,
-                             near_miss_key=near_miss_key,
-                             default_environment=default_environment)
+    def __init__(self, **kwargs):
+        self.set_defaults(**kwargs)
         return super(Ordbok, self).__init__(**kwargs)
+
+    def set_defaults(self, **kwargs):
+        self.custom_config_files = ['config.yml', 'local_config.yml']
+        self.update_defaults(
+            config_dir=kwargs.get('config_dir', 'config'),
+            custom_config_files=kwargs.get('custom_config_files'),
+            include_env=kwargs.get('include_env', True),
+            near_miss_key=kwargs.get('near_miss_key', 'ordbok'),
+            default_environment=kwargs.get('default_environment', 'development')
+        )
 
     def update_defaults(self, **kwargs):
         self.config_dir = kwargs.get('config_dir') or self.config_dir

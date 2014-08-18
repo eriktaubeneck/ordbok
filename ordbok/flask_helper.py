@@ -9,10 +9,13 @@ class OrdbokFlaskConfig(BaseConfig, Ordbok):
     a `from_yaml` method from Ordbok so that config varibables
     can be defined there.
     """
+    def __init__(self, *args, **kwargs):
+        self.set_defaults(**kwargs)
+        return super(OrdbokFlaskConfig, self).__init__(*args, **kwargs)
 
     @property
     def config_cwd(self):
-        self.root_path
+        return self.root_path
 
 
 class Flask(BaseFlask):
