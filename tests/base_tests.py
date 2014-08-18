@@ -136,6 +136,26 @@ class OrdbokTestCase(unittest.TestCase):
         with self.assertRaises(ScannerError):
             self.ordbok.load()
 
+
+class FlaskOrdbokTestCase(OrdbokTestCase):
+    def setUp(self):
+        self.app = Flask(__name__)
+        self.ordbok = self.app.config
+        self.ordbok.root_path = os.getcwd()  # the fudged files are here
+
     def test_flask_helper(self):
-        app = Flask(__name__)
-        self.assertIsInstance(app.config, OrdbokFlaskConfig)
+        self.assertIsInstance(self.app.config, OrdbokFlaskConfig)
+
+
+class SpecialFlaskOrbokTestCase(unittest.TestCase):
+    def setUp(self):
+        self.app = Flask(__name__)
+        self.ordbok = self.app.config
+
+    def test_root_path(self):
+        """
+        Generally this should be True, however in the above tests
+        the way open() was monkey patched required us to override
+        this for the the tests.
+        """
+        self.assertEquals(self.app.root_path, self.ordbok.config_cwd)
