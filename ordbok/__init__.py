@@ -4,7 +4,7 @@ import sys
 
 
 def is_str_or_unicode(s):
-    if sys.version < '3':
+    if sys.version_info[0] < 3:
         return isinstance(s, basestring)
     else:
         return isinstance(s, str)
