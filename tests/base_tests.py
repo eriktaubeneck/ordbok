@@ -12,7 +12,7 @@ from ordbok import Ordbok
 from ordbok.flask_helper import Flask, OrdbokFlaskConfig
 
 
-if sys.version < '3':
+if sys.version_info[0] < 3:
     open_function_string = '__builtin__.open'
 else:
     open_function_string = 'builtins.open'
