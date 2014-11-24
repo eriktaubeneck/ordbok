@@ -50,7 +50,7 @@ patched_environ = {
     u'ORDBOK_SECRET_KEY': u'7a1fa63d-f33a-11e3-aab5-b88d12179d58',
     u'ORDBOK_TEST_BOOLEAN': u'True',
     u'ORDBOK_TEST_INT': u'42',
-    u'HEROKU_ENV_VAR': u'why-not-zoidberg?',
+    u'REDISCLOUD_URL': u'why-not-zoidberg?',
 }
 
 
@@ -97,7 +97,7 @@ class OrdbokTestCase(unittest.TestCase):
         self.assertEquals(self.ordbok['SQLALCHEMY_DATABASE_URL'],
                           'postgres://user:password@localhost:5432/database')
         self.assertFalse(self.ordbok.get('SQLALCHEMY_ECHO'))
-        self.assertIsNone(self.ordbok.get('HEROKU_ENV_VAR'))
+        self.assertIsNone(self.ordbok.get('REDIS_URL'))
 
     @fudge.patch(open_function_string)
     @mock.patch.dict('os.environ', patched_environ)
@@ -105,12 +105,12 @@ class OrdbokTestCase(unittest.TestCase):
         fudged_config_files_copy = deepcopy(fudged_config_files)
         fudged_config_files_copy.update({
             u'config.yml': u"""
-            HEROKU_VAR: ordbok_env_config_heroku_env_var
+            REDIS_URL: 'ordbok_env_config_rediscloud_url'
             """})
         fudged_open.is_callable().calls(
             fake_file_factory(fudged_config_files_copy))
         self.ordbok.load()
-        self.assertEquals(self.ordbok['HEROKU_VAR'], 'why-not-zoidberg?')
+        self.assertEquals(self.ordbok['REDIS_URL'], 'why-not-zoidberg?')
 
     @fudge.patch(open_function_string)
     def test_ordbok_find_in_local(self, fudged_open):

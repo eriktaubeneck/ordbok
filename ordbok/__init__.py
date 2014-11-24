@@ -107,14 +107,14 @@ class ConfigEnv(ConfigFile):
         if value == self.keyword:
             self.required_keys.append(key)
         elif value.startswith(self.keyword):
-            self.keyword_lookup[key] = value.lstrip(self.keyword+'_')
+            self.keyword_lookup[key] = value.replace(self.keyword+'_', '')
             self.required_keys.append(key)
 
     def _load(self, _):
-        environ = {key.lstrip(self.config.near_miss_key.upper()+'_'): value
-                   for key, value in os.environ.items()
-                   if key.startswith(self.config.near_miss_key.upper())
-                   and value}
+        environ = {
+            key.replace(self.config.near_miss_key.upper()+'_', ''): value
+            for key, value in os.environ.items() if value and
+            key.startswith(self.config.near_miss_key.upper())}
         for key, value in environ.items():
             self.config[key] = yaml.load(value)
 
