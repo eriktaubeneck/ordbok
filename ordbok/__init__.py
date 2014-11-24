@@ -120,10 +120,10 @@ class ConfigEnv(ConfigFile):
 
         for key, env_key in self.keyword_lookup.items():
             value = os.environ.get(env_key.upper(), None)
-            if not value:
+            if value is None:
                 raise Exception(
-                    '{} config key should be specified in the environment '
-                    'but was not found.'.format(key))
+                    '{} config key should be specified in the environment as '
+                    '{} but was not found.'.format(key, env_key))
             self.config[key] = value
 
     def _check_required_keys(self):
