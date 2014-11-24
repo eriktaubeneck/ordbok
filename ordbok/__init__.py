@@ -16,15 +16,18 @@ class ConfigFile(object):
         self.config = config
         self.keyword = '{}_{}'.format(
             self.config.near_miss_key, os.path.splitext(self.filename)[0])
-        self.required_vars = []
+        self.required_keys = []
         self.config_file_path = os.path.join(
             self.config.config_cwd, self.config.config_dir, self.filename)
         self.loaded = False
 
     def load(self, config_files_lookup):
         self._load(config_files_lookup)
-        self._check_required_vars()
+        self._check_required_keys()
         self.loaded = True
+
+    def add_required_key(self, key, value=None):
+        self.required_keys.append(key)
 
     def _load_yaml(self):
         try:
@@ -52,29 +55,37 @@ class ConfigFile(object):
                 )
             if (is_str_or_unicode(value) and
                     value.startswith(self.config.near_miss_key)):
-                if value not in config_files_lookup.keys():
+                config_files = [k for k in config_files_lookup.keys()
+                                if value.startswith(k)]
+                if len(config_files) == 0:
                     raise Exception(
                         '{0} is required to be specified in {1} '
                         'but {1} was not registered with Ordbok'.format(
                             key, self.config_file_path))
-                elif value == self.keyword:
+                elif len(config_files) > 1:
+                    raise Exception(
+                        'Config file names are ambiguous. Please make them '
+                        'distinct: {}'.format(config_files)
+                    )
+                config_file = config_files[0]
+                if config_file == self.keyword:
                     raise Exception(
                         'Cannot require {} required Ordbok config '
                         'variables in their own file.'.format(
                             self.filename))
-                elif config_files_lookup[value].loaded:
+                elif config_files_lookup[config_file].loaded:
                     raise Exception(
                         'Cannot specify {0} required Ordbok config '
                         'variables in {1}, {0} is loaded before '
                         '{1}.'.format(
-                            config_files_lookup[value].filename,
+                            config_files_lookup[config_file].filename,
                             self.filename))
-                config_files_lookup[value].required_vars.append(key)
+                config_files_lookup[config_file].add_required_key(key, value)
             else:
                 self.config[key] = value
 
-    def _check_required_vars(self):
-        for key in self.required_vars:
+    def _check_required_keys(self):
+        for key in self.required_keys:
             if not self.config.get(key):
                 raise Exception(
                     '{} config key should be specified in {} '
@@ -85,8 +96,16 @@ class ConfigEnv(ConfigFile):
     def __init__(self, config):
         self.config = config
         self.keyword = '{}_env_config'.format(self.config.near_miss_key)
-        self.required_vars = []
+        self.required_keys = []
+        self.keyword_lookup = {}
         self.loaded = False
+
+    def add_required_key(self, key, value):
+        if value == self.keyword:
+            self.required_keys.append(key)
+        elif value.startswith(self.keyword):
+            self.keyword_lookup[key] = value.lstrip(self.keyword+'_')
+            self.required_keys.append(key)
 
     def _load(self, _):
         environ = {key.lstrip(self.config.near_miss_key.upper()+'_'): value
@@ -96,8 +115,16 @@ class ConfigEnv(ConfigFile):
         for key, value in environ.items():
             self.config[key] = yaml.load(value)
 
-    def _check_required_vars(self):
-        for key in self.required_vars:
+        for key, env_key in self.keyword_lookup.items():
+            value = os.environ.get(env_key.upper(), None)
+            if not value:
+                raise Exception(
+                    '{} config key should be specified in the environment '
+                    'but was not found.'.format(key))
+            self.config[key] = value
+
+    def _check_required_keys(self):
+        for key in self.required_keys:
             if not self.config.get(key):
                 raise Exception(
                     '{} config key should be specified in the environment '

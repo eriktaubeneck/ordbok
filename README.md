@@ -75,9 +75,16 @@ YAML already has some structure like this, but the idea behind the `local_config
 
 Variables that show up in multiple files will assume the value in the later declaration. Moreover, variables can be declared in earlier files such that they must be found in later file or the environment. This works with the `<near_miss_key>`, which defaults to `ordbok` but can be specified. For example setting `KEY: 'ordbok_local_config'` in `config.yml` will raise an exception if `KEY` isn't specified in `local_config.yml`.
 
-####Environmental Config
-The environment works mostly like the YAML config files, and is the last in the hierarchy chain of loading config variables. We take every environmental variable of the form `ORDBOK_KEY` in the environment and add `'KEY'` to the Ordbok config dict. Similar to the files, setting `KEY: 'ordbok_env'` in any of the YAML config files will raise an exception if `ORDBOK_KEY` isn't specified in the environment.
+####OS Environmental Config
+Config variables can be loaded from the OS environment just like the YAML config files, and is the last in the hierarchy of config variables sources. Config variables are loaded from the OS environment in two ways:
 
+1. Every environmental variable of the form `ORDBOK_<KEY>` will be loaded into the Ordbok config dict as `'<KEY>':value` (where `value` is the value of the environmental variable.)
+
+2. In any YAML config file, setting `KEY: ordbok_env_conifg_<env_var>` will look for `<ENV_VAR>` in the OS Environment and load the value into the Ordbok config dict as `'KEY': value`.
+
+Specifying `KEY: 'ordbok_env_config'` or `KEY: 'ordbok_env_config_<env_var>'` in any of the YAML config files will raise an exception if `ORDBOK_KEY` isn't specified in the environment.
+
+NOTE: OS Environment variables and Ordbok config dict keys are assumed to be uppercase (`ENV_VAR` and `'KEY'` respectively), even if the value is specified in lowercase (`env_var`.)
 
 ### Defaults
 Generally when using Ordbok, these following kwargs can be supplied at initialization. However when working with Flask, initialization of the config happens internally, so a helper method `app.config.update_defaults()` is provided. This must be called before `app.config.load()` to have any effect.
@@ -169,7 +176,6 @@ By setting `SQLALCHEMY_DATABASE_URL: 'ordbok_local_config'` and `SECRET_KEY: 'or
  - Add advanced Example to README.md
  - Add support for more file types (JSON, maybe XML?)
  - Add integrated support for other frameworks (Pyramid, Django, etc.)
- - Add ability to specify where to look in environment for a variable (e.g. you want to look for `KEY` at `HEROKU_PROVIDED_VALUE` rather than `ORDBOK_KEY` in the environment.
  - Add a private config file type, where an encrypted version of the file could exist in the repo, and a password could be set in the environment where the private keys are used. Will require integration with Flask-Script to provide methods to decrypt locally with the password, edit keys, and re-encrypt.
 
 
