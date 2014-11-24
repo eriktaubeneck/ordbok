@@ -9,9 +9,9 @@ from setuptools import setup
 
 setup(
     name='ordbok',
-    version='0.1.4',
+    version='0.1.5',
     packages=['ordbok'],
-    url='http://github.com/alphaworksinc/ordbok',
+    url='http://github.com/eriktaubeneck/ordbok',
     license='MIT',
     author='Erik Taubeneck',
     author_email='erik.taubeneck@gmail.com',
