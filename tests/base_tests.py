@@ -27,6 +27,7 @@ DEVELOPMENT: &development
   <<: *common
   DEBUG: True
   SQLALCHEMY_DATABASE_URL: 'ordbok_local_config'
+  TEST_BOOLEAN_VAR: 'ordbok_local_config'
 
 PRODUCTION:
   <<: *common
@@ -36,6 +37,7 @@ PRODUCTION:
     u'local_config.yml': u"""
 SQLALCHEMY_DATABASE_URL: 'sqlite:///tmp/database.db'
 SQLALCHEMY_ECHO: True
+TEST_BOOLEAN_VAR: False
 """}
 
 fudged_config_no_local_file = {

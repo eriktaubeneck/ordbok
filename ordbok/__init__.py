@@ -84,12 +84,15 @@ class ConfigFile(object):
             else:
                 self.config[key] = value
 
-    def _check_required_keys(self):
+    def _check_required_keys(self, custom_exception_gen=None):
         for key in self.required_keys:
-            if not self.config.get(key):
-                raise Exception(
-                    '{} config key should be specified in {} '
-                    'but was not found.'.format(key, self.filename))
+            if self.config.get(key) is None:
+                if custom_exception_gen:
+                    raise custom_exception_gen(self, key)
+                else:
+                    raise Exception(
+                        '{} config key should be specified in {} '
+                        'but was not found.'.format(key, self.filename))
 
 
 class ConfigEnv(ConfigFile):
@@ -124,11 +127,12 @@ class ConfigEnv(ConfigFile):
             self.config[key] = value
 
     def _check_required_keys(self):
-        for key in self.required_keys:
-            if not self.config.get(key):
-                raise Exception(
-                    '{} config key should be specified in the environment '
-                    'but was not found.'.format(key))
+        def custom_exception_gen(_, key):
+            return Exception(
+                '{} config key should be specified in the environment '
+                'but was not found.'.format(key))
+        return super(ConfigEnv, self)._check_required_keys(
+            custom_exception_gen=custom_exception_gen)
 
 
 class Ordbok(dict):
