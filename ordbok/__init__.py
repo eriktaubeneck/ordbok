@@ -169,11 +169,12 @@ class Ordbok(dict):
                 '{}_ENVIRONMENT'.format(self.near_miss_key.upper()),
                 self.default_environment).lower()
 
-        config_files = [ConfigFile(f, self) for f in self.custom_config_files]
+        self.config_files = [ConfigFile(f, self) for f
+                             in self.custom_config_files]
 
         if self.include_env:
-            config_files.append(ConfigEnv(self))
+            self.config_files.append(ConfigEnv(self))
 
-        config_files_lookup = {cf.keyword: cf for cf in config_files}
-        for config_file in config_files:
+        config_files_lookup = {cf.keyword: cf for cf in self.config_files}
+        for config_file in self.config_files:
             config_file.load(config_files_lookup)
