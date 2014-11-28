@@ -8,8 +8,10 @@ from yaml.scanner import ScannerError
 from contextlib import contextmanager
 from io import StringIO
 
+from flask import Flask as BaseFlask
 from ordbok import Ordbok
-from ordbok.flask_helper import Flask, OrdbokFlaskConfig
+from ordbok.flask_helper import (
+    Flask as OrdbokFlask, OrdbokFlaskConfig, make_config)
 
 
 if sys.version_info[0] < 3:
@@ -150,11 +152,9 @@ class OrdbokTestCase(unittest.TestCase):
             fudged_bad_yaml_config_files))
         with self.assertRaises(ScannerError):
             self.ordbok.load()
-
-
 class FlaskOrdbokTestCase(OrdbokTestCase):
     def setUp(self):
-        self.app = Flask(__name__)
+        self.app = OrdbokFlask(__name__)
         self.ordbok = self.app.config
         self.ordbok.root_path = os.getcwd()  # the fudged files are here
 
@@ -164,7 +164,7 @@ class FlaskOrdbokTestCase(OrdbokTestCase):
 
 class SpecialFlaskOrbokTestCase(unittest.TestCase):
     def setUp(self):
-        self.app = Flask(__name__)
+        self.app = OrdbokFlask(__name__)
         self.ordbok = self.app.config
 
     def test_root_path(self):
@@ -174,3 +174,15 @@ class SpecialFlaskOrbokTestCase(unittest.TestCase):
         this for the the tests.
         """
         self.assertEquals(self.app.root_path, self.ordbok.config_cwd)
+
+
+class BaseFlaskOrdbokTestCase(unittest.TestCase):
+    def setUp(self):
+        BaseFlask.config_class = OrdbokFlaskConfig
+        BaseFlask.make_config = make_config
+        self.app = BaseFlask(__name__)
+        self.ordbok = self.app.config
+        self.ordbok.root_path = os.getcwd()  # the fudged files are here
+
+    def test_flask_helper(self):
+        self.assertIsInstance(self.app.config, OrdbokFlaskConfig)

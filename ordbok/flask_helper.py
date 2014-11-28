@@ -18,15 +18,17 @@ class OrdbokFlaskConfig(BaseConfig, Ordbok):
         return self.root_path
 
 
+def make_config(self, instance_relative=False):
+    root_path = self.root_path
+    if instance_relative:
+        root_path = self.instance_path
+    return self.config_class(root_path, self.default_config)
+
+
 class Flask(BaseFlask):
     """
     Extened version of `Flask` that implements the custom config class
     defined above.
     """
     config_class = OrdbokFlaskConfig
-
-    def make_config(self, instance_relative=False):
-        root_path = self.root_path
-        if instance_relative:
-            root_path = self.instance_path
-        return self.config_class(root_path, self.default_config)
+    make_config = make_config
