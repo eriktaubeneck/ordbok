@@ -22,7 +22,7 @@ setup(
     include_package_data=True,
     platforms='any',
     install_requires=[
-        'pyyaml'
+        'pyyaml >=3.0, <4.a0'
     ],
     classifiers=[
         'Development Status :: 3 - Alpha',
