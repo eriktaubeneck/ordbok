@@ -57,13 +57,16 @@ app.config.load()
 
 Then, in your app root path, create a directory `config` and add two files `config.yml` and `local_config.yml`. See [Usage](#usage) for more detailed usage and [Example](#examples) for an example YAML configuration.
 
+This updated version of `Flask` also monitors your config files for changes and triggers the reloader when running `app.run()` in debug mode.
+
 The `Flask` object here is whatever version you have install locally (`ordbok.flask_helper` imports `Flask` directly). Regardless, importing `Flask` from `ordbok` does feel a little weird, and if you prefer, you can installed do something to the effect of:
 
 ```
 from flask import Flask
-from ordbok.flask_helper import OrdbokFlaskConfig, make_config
+from ordbok.flask_helper import OrdbokFlaskConfig, make_config, run
 Flask.config_class = OrdbokFlaskConfig
 Flask.make_config = make_config
+Flask.run = run
 app = Flask(__name__)
 app.config.load()
 ```

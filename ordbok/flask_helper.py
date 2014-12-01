@@ -25,6 +25,17 @@ def make_config(self, instance_relative=False):
     return self.config_class(root_path, self.default_config)
 
 
+def run(self, *args, **kwargs):
+    if self.config_class is not OrdbokFlaskConfig:
+        raise Exception(
+            'Cannot override Flask.run() without using OrdbokFlaskConfig '
+            'as Flask.config_class.')
+    if kwargs.get('use_reloader') is not False and self.debug:
+        kwargs.setdefault('extra_files', [])
+        kwargs['extra_files'].extend(self.config.config_file_names)
+    return super(Flask, self).run(*args, **kwargs)
+
+
 class Flask(BaseFlask):
     """
     Extened version of `Flask` that implements the custom config class
@@ -32,3 +43,4 @@ class Flask(BaseFlask):
     """
     config_class = OrdbokFlaskConfig
     make_config = make_config
+    run = run
