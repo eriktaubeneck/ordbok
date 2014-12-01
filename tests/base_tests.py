@@ -11,7 +11,7 @@ from io import StringIO
 from flask import Flask as BaseFlask
 from ordbok import Ordbok
 from ordbok.flask_helper import (
-    Flask as OrdbokFlask, OrdbokFlaskConfig, make_config, run)
+    Flask as OrdbokFlask, OrdbokFlaskConfig, make_config)
 
 
 if sys.version_info[0] < 3:
