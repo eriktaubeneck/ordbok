@@ -1,4 +1,6 @@
 venv
+venv3
+venvpypy
 .coverage
 build
 dist
