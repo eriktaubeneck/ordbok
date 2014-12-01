@@ -11,7 +11,7 @@ from io import StringIO
 from flask import Flask as BaseFlask
 from ordbok import Ordbok
 from ordbok.flask_helper import (
-    Flask as OrdbokFlask, OrdbokFlaskConfig, make_config)
+    Flask as OrdbokFlask, OrdbokFlaskConfig, make_config, run)
 
 
 if sys.version_info[0] < 3:
@@ -152,6 +152,8 @@ class OrdbokTestCase(unittest.TestCase):
             fudged_bad_yaml_config_files))
         with self.assertRaises(ScannerError):
             self.ordbok.load()
+
+
 class FlaskOrdbokTestCase(OrdbokTestCase):
     def setUp(self):
         self.app = OrdbokFlask(__name__)
@@ -160,6 +162,29 @@ class FlaskOrdbokTestCase(OrdbokTestCase):
 
     def test_flask_helper(self):
         self.assertIsInstance(self.app.config, OrdbokFlaskConfig)
+
+    def test_flask_reloader(self):
+        BaseFlask.run = mock.MagicMock(return_value=True)
+        self.ordbok.load()
+        self.app.debug = True
+        self.app.run()
+        BaseFlask.run.assert_called()
+        BaseFlask.run.assert_called_with(
+            extra_files=self.ordbok.config_file_names)
+
+    def test_flask_reloader_debug_off(self):
+        BaseFlask.run = mock.MagicMock(return_value=True)
+        self.ordbok.load()
+        self.app.run()
+        BaseFlask.run.assert_called()
+        BaseFlask.run.assert_called_with()  # no extra files
+
+    def test_flask_reloader_use_reloader_false(self):
+        BaseFlask.run = mock.MagicMock(return_value=True)
+        self.ordbok.load()
+        self.app.run(use_reloader=False)
+        BaseFlask.run.assert_called()
+        BaseFlask.run.assert_called_with(use_reloader=False)  # no extra files
 
 
 class SpecialFlaskOrbokTestCase(unittest.TestCase):

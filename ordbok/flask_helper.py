@@ -32,10 +32,7 @@ def run(self, *args, **kwargs):
             'as Flask.config_class.')
     if kwargs.get('use_reloader') is not False and self.debug:
         kwargs.setdefault('extra_files', [])
-        config_files = [getattr(config_file, 'config_file_path', None)
-                        for config_file in self.config.config_files if
-                        getattr(config_file, 'config_file_path', None)]
-        kwargs['extra_files'].extend(config_files)
+        kwargs['extra_files'].extend(self.config.config_file_names)
     return super(Flask, self).run(*args, **kwargs)
 
 

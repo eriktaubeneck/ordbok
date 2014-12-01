@@ -141,6 +141,7 @@ class Ordbok(dict):
         return super(Ordbok, self).__init__(**kwargs)
 
     def set_defaults(self, **kwargs):
+        self.config_files = []
         self.custom_config_files = ['config.yml', 'local_config.yml']
         self.update_defaults(
             config_dir=kwargs.get('config_dir', 'config'),
@@ -162,6 +163,12 @@ class Ordbok(dict):
     @property
     def config_cwd(self):
         return os.getcwd()
+
+    @property
+    def config_file_names(self):
+        return [getattr(config_file, 'config_file_path', None)
+                for config_file in self.config_files if
+                getattr(config_file, 'config_file_path', None)]
 
     def load(self):
         if not self.get('ENVIRONMENT'):
