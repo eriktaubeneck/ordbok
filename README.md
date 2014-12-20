@@ -1,7 +1,7 @@
 # Ordbok
 
-[![Build Status](https://travis-ci.org/alphaworksinc/ordbok.svg?branch=master)](https://travis-ci.org/alphaworksinc/ordbok)
-[![Coverage Status](https://coveralls.io/repos/alphaworksinc/ordbok/badge.png?branch=master)](https://coveralls.io/r/alphaworksinc/ordbok?branch=master)
+[![Build Status](https://travis-ci.org/eriktaubeneck/ordbok.svg?branch=master)](https://travis-ci.org/eriktaubeneck/ordbok)
+[![Coverage Status](https://img.shields.io/coveralls/eriktaubeneck/ordbok.svg)](https://coveralls.io/r/eriktaubeneck/ordbok)
 [![Latest Version](https://pypip.in/version/ordbok/badge.png)](https://pypi.python.org/pypi/ordbok/)
 [![Downloads](https://pypip.in/download/ordbok/badge.png)](https://pypi.python.org/pypi/ordbok/)
 [![License](https://pypip.in/license/ordbok/badge.png)](https://pypi.python.org/pypi/ordbok/)
