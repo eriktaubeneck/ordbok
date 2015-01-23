@@ -10,9 +10,17 @@ def is_str_or_unicode(s):
         return isinstance(s, str)
 
 
+def open_wrapper(*args, **kwargs):
+    return open(*args, **kwargs)
+
+
 class ConfigFile(object):
-    def __init__(self, filename, config):
+    def __init__(self, filename, config=None):
         self.filename = filename
+        if config:
+            self.init_config(config)
+
+    def init_config(self, config):
         self.config = config
         self.keyword = '{}_{}'.format(
             self.config.near_miss_key, os.path.splitext(self.filename)[0])
@@ -31,7 +39,7 @@ class ConfigFile(object):
 
     def _load_yaml(self):
         try:
-            with open(self.config_file_path) as f:
+            with open_wrapper(self.config_file_path) as f:
                 return yaml.load(f)
         except IOError:
             pass
@@ -156,7 +164,7 @@ class Ordbok(dict):
         self.custom_config_files = (kwargs.get('custom_config_files') or
                                     self.custom_config_files)
         self.include_env = kwargs.get('include_env') or self.include_env
-        self.near_miss_key = kwargs.get('near_miss_key') or self.near_miss
+        self.near_miss_key = kwargs.get('near_miss_key') or self.near_miss_key
         self.default_environment = (kwargs.get('default_environment') or
                                     self.default_environment)
 
@@ -176,8 +184,14 @@ class Ordbok(dict):
                 '{}_ENVIRONMENT'.format(self.near_miss_key.upper()),
                 self.default_environment).lower()
 
-        self.config_files = [ConfigFile(f, self) for f
-                             in self.custom_config_files]
+        self.config_files = [f for f in self.custom_config_files
+                             if isinstance(f, ConfigFile)]
+        for f in self.config_files:
+            f.init_config(self)
+
+        self.config_files.extend(
+            [ConfigFile(f, self) for f in self.custom_config_files
+             if is_str_or_unicode(f)])
 
         if self.include_env:
             self.config_files.append(ConfigEnv(self))
@@ -185,3 +199,20 @@ class Ordbok(dict):
         config_files_lookup = {cf.keyword: cf for cf in self.config_files}
         for config_file in self.config_files:
             config_file.load(config_files_lookup)
+
+    @property
+    def private_file_key(self):
+        key = self.get(
+            'PRIVATE_KEY_ORDBOK',
+            os.environ.get(
+                'ORDBOK_PRIVATE_KEY_ORDBOK',
+                os.environ.get('PRIVATE_KEY_ORDBOK')
+            )
+        )
+        if not key:
+            raise Exception(
+                'PRIVATE_KEY_ORDBOK config variable not found. '
+                'Please set in configuration loaded before PrivateConfigFile '
+                'or in the OS environment as PRIVATE_KEY_ORDBOK.'
+            )
+        return key

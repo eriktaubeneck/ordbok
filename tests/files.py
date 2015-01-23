@@ -1,12 +1,8 @@
-import sys
 import os
 from contextlib import contextmanager
-from io import StringIO
+from io import StringIO, BytesIO
 
-if sys.version_info[0] < 3:
-    open_function_string = '__builtin__.open'
-else:
-    open_function_string = 'builtins.open'
+open_function_string = 'ordbok.open_wrapper'
 
 fudged_config_files = {
     u'config.yml': u"""
@@ -29,7 +25,7 @@ PRODUCTION:
 SQLALCHEMY_DATABASE_URL: 'sqlite:///tmp/database.db'
 SQLALCHEMY_ECHO: True
 TEST_BOOLEAN_VAR: False
-""",}
+""", }
 
 fudged_config_no_local_file = {
     key: value for key, value in fudged_config_files.items()
@@ -52,7 +48,11 @@ def fake_file_factory(fudged_config_files):
             os.path.relpath(
                 filename,
                 os.path.join(os.getcwd(), 'config')),
-            u'')
-
-        yield StringIO(content)
+            None)
+        if content is None:
+            raise IOError('{} not found'.format(filename))
+        if isinstance(content, bytes):
+            yield BytesIO(content)
+        else:
+            yield StringIO(content)
     return fake_file

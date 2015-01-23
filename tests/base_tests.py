@@ -7,11 +7,12 @@ from yaml.scanner import ScannerError
 
 from flask import Flask as BaseFlask
 from ordbok import Ordbok
+from ordbok.private import PrivateConfigFile, encrypt_content
 from ordbok.flask_helper import (
     Flask as OrdbokFlask, OrdbokFlaskConfig, make_config)
 
 from tests.files import (
-    open_function_string, fudged_config_files, fudged_config_no_local_file,
+    fudged_config_files, fudged_config_no_local_file,
     patched_environ, fake_file_factory)
 
 
@@ -19,7 +20,7 @@ class OrdbokTestCase(unittest.TestCase):
     def setUp(self):
         self.ordbok = Ordbok()
 
-    @fudge.patch(open_function_string)
+    @fudge.patch('ordbok.open_wrapper')
     def test_ordbok_default(self, fudged_open):
         fudged_open.is_callable().calls(fake_file_factory(fudged_config_files))
         self.ordbok.load()
@@ -30,7 +31,7 @@ class OrdbokTestCase(unittest.TestCase):
                           'sqlite:///tmp/database.db')
         self.assertTrue(self.ordbok['SQLALCHEMY_ECHO'])
 
-    @fudge.patch(open_function_string)
+    @fudge.patch('ordbok.open_wrapper')
     @mock.patch.dict('os.environ', patched_environ)
     def test_ordbok_env(self, fudged_open):
         fudged_open.is_callable().calls(
@@ -47,7 +48,7 @@ class OrdbokTestCase(unittest.TestCase):
         self.assertFalse(self.ordbok.get('SQLALCHEMY_ECHO'))
         self.assertIsNone(self.ordbok.get('REDIS_URL'))
 
-    @fudge.patch(open_function_string)
+    @fudge.patch('ordbok.open_wrapper')
     @mock.patch.dict('os.environ', patched_environ)
     def test_ordbok_env_reference(self, fudged_open):
         fudged_config_files_copy = deepcopy(fudged_config_files)
@@ -60,7 +61,7 @@ class OrdbokTestCase(unittest.TestCase):
         self.ordbok.load()
         self.assertEquals(self.ordbok['REDIS_URL'], 'why-not-zoidberg?')
 
-    @fudge.patch(open_function_string)
+    @fudge.patch('ordbok.open_wrapper')
     def test_ordbok_find_in_local(self, fudged_open):
         '''
         Test that Ordbok raises an Exception when a value is set to be found
@@ -72,7 +73,7 @@ class OrdbokTestCase(unittest.TestCase):
         with self.assertRaises(Exception):
             self.ordbok.load()
 
-    @fudge.patch(open_function_string)
+    @fudge.patch('ordbok.open_wrapper')
     def test_ordbok_copied_local_settings(self, fudged_open):
         fudged_config_files_copy = deepcopy(fudged_config_files)
         fudged_config_files_copy.update({
@@ -85,7 +86,7 @@ class OrdbokTestCase(unittest.TestCase):
         with self.assertRaises(TypeError):
             self.ordbok.load()
 
-    @fudge.patch(open_function_string)
+    @fudge.patch('ordbok.open_wrapper')
     def test_ordbok_bad_yaml_local_settings(self, fudged_open):
         fudged_bad_yaml_config_files = deepcopy(fudged_config_files)
         fudged_bad_yaml_config_files.update({
@@ -98,6 +99,42 @@ class OrdbokTestCase(unittest.TestCase):
             fudged_bad_yaml_config_files))
         with self.assertRaises(ScannerError):
             self.ordbok.load()
+
+
+class OrdbokPrivateConfigFileTestCase(unittest.TestCase):
+    def setUp(self):
+        self.private_config_file = PrivateConfigFile('private_config.yml')
+        self.ordbok = Ordbok(
+            custom_config_files=['config.yml', 'local_config.yml',
+                                 self.private_config_file]
+        )
+
+    @fudge.patch('ordbok.private.open_wrapper')
+    def test_ordbok_private_config(self, fudged_open):
+        fudged_config_files_with_private = deepcopy(fudged_config_files)
+        fudged_config_files_with_private.update({
+            u'private_config.yml': u"""
+            OAUTH_KEY: 'super_secret_key'
+            OAUTH_SECRET: 'even_secreter_secret'
+            """,
+        })
+
+        # set directly instead of completely rewriting 'config.yml'
+        self.ordbok['PRIVATE_KEY_ORDBOK'] = 'foobarbaz'
+
+        encrypted_content = encrypt_content(
+            self.ordbok.private_file_key,
+            fudged_config_files_with_private[u'private_config.yml'])
+        fudged_config_files_with_private.update({
+            u'private_config.yml.private': encrypted_content,
+        })
+        fudged_open.is_callable().calls(
+            fake_file_factory(fudged_config_files_with_private))
+
+        self.ordbok.load()
+
+        self.assertEquals(self.ordbok['OAUTH_KEY'], 'super_secret_key')
+        self.assertEquals(self.ordbok['OAUTH_SECRET'], 'even_secreter_secret')
 
 
 class FlaskOrdbokTestCase(OrdbokTestCase):
