@@ -24,6 +24,10 @@ setup(
     install_requires=[
         'pyyaml >=3.0, <4.a0'
     ],
+    entry_points="""
+    [console_scripts]
+    ordbok = ordbok.cli:main
+    """,
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Environment :: Plugins',

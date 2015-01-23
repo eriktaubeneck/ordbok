@@ -1,4 +1,5 @@
 import os
+import sys
 import yaml
 import simplecrypt
 from ordbok import ConfigFile, open_wrapper
@@ -11,7 +12,7 @@ class PrivateConfigFile(ConfigFile):
 
     def _load_encrypted_file(self):
         try:
-            with open_wrapper(self.config_file_path + u'.private') as f:
+            with open_wrapper(self.config_file_path + u'.private', 'rb') as f:
                 return f.read()
         except IOError:
             if os.path.exists(self.config_file_path):
@@ -27,15 +28,20 @@ class PrivateConfigFile(ConfigFile):
 
     def _load_decrypted_file(self):
         try:
-            with open_wrapper(self.config_file_path) as f:
+            with open_wrapper(self.config_file_path, 'r+') as f:
                 return f.read()
         except IOError:
             raise Exception("{} not found.".format(self.config_file_path))
 
     def _save_encrypted_file(self):
         content = self._load_decrypted_file()
-        content = self._encrypt_file(content)
-        with open_wrapper(self.config_file_path+'.private', 'w') as f:
+        content = self._encrypt_content(content)
+        with open_wrapper(self.config_file_path+'.private', 'wb') as f:
+            f.write(content)
+
+    def _save_decrypted_file(self):
+        content = self._load_and_decrypt_file()
+        with open_wrapper(self.config_file_path, 'w') as f:
             f.write(content)
 
     def _load_and_decrypt_file(self):
@@ -43,8 +49,11 @@ class PrivateConfigFile(ConfigFile):
         return self._decrypt_content(content)
 
     def _decrypt_content(self, content):
-        return simplecrypt.decrypt(self.config.private_file_key, content)
+        content = simplecrypt.decrypt(self.config.private_file_key, content)
+        if sys.version_info[0] < 3:
+            return content
+        else:
+            return str(content.decode('utf8'))
 
-
-def encrypt_content(key, content):
-    return simplecrypt.encrypt(key, content)
+    def _encrypt_content(self, content):
+        return simplecrypt.encrypt(self.config.private_file_key, content)

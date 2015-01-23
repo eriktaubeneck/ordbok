@@ -43,7 +43,7 @@ patched_environ = {
 
 def fake_file_factory(fudged_config_files):
     @contextmanager
-    def fake_file(filename):
+    def fake_file(filename, mode='r'):
         content = fudged_config_files.get(
             os.path.relpath(
                 filename,

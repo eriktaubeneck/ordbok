@@ -7,7 +7,7 @@ from yaml.scanner import ScannerError
 
 from flask import Flask as BaseFlask
 from ordbok import Ordbok
-from ordbok.private import PrivateConfigFile, encrypt_content
+from ordbok.private import PrivateConfigFile
 from ordbok.flask_helper import (
     Flask as OrdbokFlask, OrdbokFlaskConfig, make_config)
 
@@ -121,9 +121,9 @@ class OrdbokPrivateConfigFileTestCase(unittest.TestCase):
 
         # set directly instead of completely rewriting 'config.yml'
         self.ordbok['PRIVATE_KEY_ORDBOK'] = 'foobarbaz'
+        self.private_config_file.init_config(self.ordbok)
 
-        encrypted_content = encrypt_content(
-            self.ordbok.private_file_key,
+        encrypted_content = self.private_config_file._encrypt_content(
             fudged_config_files_with_private[u'private_config.yml'])
         fudged_config_files_with_private.update({
             u'private_config.yml.private': encrypted_content,
