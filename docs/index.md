@@ -13,27 +13,3 @@ Ordbok abstracts the loading of a configuration from YAML files into a Python di
 
 ![Svenska Akademiens ordbok](http://fc01.deviantart.net/fs70/i/2011/048/b/1/svenska_akademiens_ordbok_by_droemmaskin-d39rta7.jpg)
 _<a href="http://droemmaskin.deviantart.com/art/Svenska-Akademiens-ordbok-197812735">Svenska Akademiens ordbok</a> by <span class="username-with-symbol u"><a class="u regular username" href="http://droemmaskin.deviantart.com/">droemmaskin</a><span class="user-symbol regular" data-quicktip-text="" data-show-tooltip="" data-gruser-type="regular"></span></span> on <a href="http://www.deviantart.com">deviantART</a>. Provided under [Attribution-NonCommercial-ShareAlike 3.0 Unported](http://creativecommons.org/licenses/by-nc-sa/3.0/legalcode)_
-
-
-# Docs
-
-[Full Docs](http://ordbok.readthedocs.org/en/latest) hosted by Read the Docs.
-
-
-## Installation
-
-Inside a [virtualenv](http://virtualenv.readthedocs.org/en/latest/) run
-
-```
-pip install ordbok
-```
-
-## Quickstart
-
-```
-from ordbok import Ordbok
-config = Ordbok()
-config.load()
-```
-
-Then, in your app root path, create a directory `config` and add two files `config.yml` and `local_config.yml`. See the [examples](http://ordbok.readthedocs.org/en/latest/usage/examples/) for an example YAML configuration.
