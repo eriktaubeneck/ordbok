@@ -1,0 +1,10 @@
+site_name: Ordbok Docs
+theme: readthedocs
+pages:
+  - [index.md, Home, Home]
+  - [get-started.md, Home, Getting Started]
+  - [usage/defaults.md, Usage, Defaults]
+  - [usage/filetypes.md, Usage, File Types]
+  - [usage/examples.md, Usage, Examples]
+  - [contribute.md, Contributing, Contributing]
+  - [license.md, Contributing, License]
