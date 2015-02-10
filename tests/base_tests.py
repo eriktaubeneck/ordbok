@@ -154,6 +154,42 @@ class OrdbokTestCase(unittest.TestCase):
             self.ordbok.load()
 
 
+class OrdbokDefaultsTestCase(OrdbokTestCase):
+    def test_update_all_defaults(self):
+        self.ordbok.update_defaults(
+            config_dir='ordbok_config',
+            custom_config_files=['config.yml'],
+            include_env=False,
+            near_miss_key='ordbok_foo',
+            default_environment='testing',
+        )
+
+    def test_update_config_dir(self):
+        self.ordbok.update_defaults(
+            config_dir='ordbok_config',
+        )
+
+    def test_update_custom_config_files(self):
+        self.ordbok.update_defaults(
+            custom_config_files=['config.yml'],
+        )
+
+    def test_update_include_env(self):
+        self.ordbok.update_defaults(
+            include_env=False,
+        )
+
+    def test_update_near_miss_key(self):
+        self.ordbok.update_defaults(
+            near_miss_key='ordbok_foo',
+        )
+
+    def test_update_default_environment(self):
+        self.ordbok.update_defaults(
+            default_environment='testing',
+        )
+
+
 class FlaskOrdbokTestCase(OrdbokTestCase):
     def setUp(self):
         self.app = OrdbokFlask(__name__)
