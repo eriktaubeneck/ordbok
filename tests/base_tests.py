@@ -1,4 +1,3 @@
-import six
 import os
 import unittest
 import mock
@@ -13,13 +12,6 @@ from ordbok import Ordbok
 from ordbok.flask_helper import (
     Flask as OrdbokFlask, OrdbokFlaskConfig, make_config)
 
-
-if six.PY2:
-    open_function_string = '__builtin__.open'
-elif six.PY3:
-    open_function_string = 'builtins.open'
-else:
-    raise RuntimeError('None compatible version of Python.')
 
 fudged_config_files = {
     u'config.yml': u"""
@@ -75,7 +67,7 @@ class OrdbokTestCase(unittest.TestCase):
     def setUp(self):
         self.ordbok = Ordbok()
 
-    @fudge.patch(open_function_string)
+    @fudge.patch('six.moves.builtins.open')
     def test_ordbok_default(self, fudged_open):
         fudged_open.is_callable().calls(fake_file_factory(fudged_config_files))
         self.ordbok.load()
@@ -86,7 +78,7 @@ class OrdbokTestCase(unittest.TestCase):
                           'sqlite:///tmp/database.db')
         self.assertTrue(self.ordbok['SQLALCHEMY_ECHO'])
 
-    @fudge.patch(open_function_string)
+    @fudge.patch('six.moves.builtins.open')
     @mock.patch.dict('os.environ', patched_environ)
     def test_ordbok_env(self, fudged_open):
         fudged_open.is_callable().calls(
@@ -103,7 +95,7 @@ class OrdbokTestCase(unittest.TestCase):
         self.assertFalse(self.ordbok.get('SQLALCHEMY_ECHO'))
         self.assertIsNone(self.ordbok.get('REDIS_URL'))
 
-    @fudge.patch(open_function_string)
+    @fudge.patch('six.moves.builtins.open')
     @mock.patch.dict('os.environ', patched_environ)
     def test_ordbok_env_reference(self, fudged_open):
         fudged_config_files_copy = deepcopy(fudged_config_files)
@@ -116,7 +108,7 @@ class OrdbokTestCase(unittest.TestCase):
         self.ordbok.load()
         self.assertEquals(self.ordbok['REDIS_URL'], 'why-not-zoidberg?')
 
-    @fudge.patch(open_function_string)
+    @fudge.patch('six.moves.builtins.open')
     def test_ordbok_find_in_local(self, fudged_open):
         '''
         Test that Ordbok raises an Exception when a value is set to be found
@@ -128,7 +120,7 @@ class OrdbokTestCase(unittest.TestCase):
         with self.assertRaises(Exception):
             self.ordbok.load()
 
-    @fudge.patch(open_function_string)
+    @fudge.patch('six.moves.builtins.open')
     def test_ordbok_copied_local_settings(self, fudged_open):
         fudged_config_files_copy = deepcopy(fudged_config_files)
         fudged_config_files_copy.update({
@@ -141,7 +133,7 @@ class OrdbokTestCase(unittest.TestCase):
         with self.assertRaises(TypeError):
             self.ordbok.load()
 
-    @fudge.patch(open_function_string)
+    @fudge.patch('six.moves.builtins.open')
     def test_ordbok_bad_yaml_local_settings(self, fudged_open):
         fudged_bad_yaml_config_files = deepcopy(fudged_config_files)
         fudged_bad_yaml_config_files.update({
