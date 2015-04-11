@@ -22,7 +22,8 @@ setup(
     include_package_data=True,
     platforms='any',
     install_requires=[
-        'pyyaml >=3.0, <4.a0'
+        'pyyaml >=3.0, <4.a0',
+        'six>= 1.9.0, <2.a0'
     ],
     classifiers=[
         'Development Status :: 3 - Alpha',
@@ -33,7 +34,8 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Natural Language :: English ',
         'Operating System :: OS Independent',
-        'Programming Language :: Python',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 3',
         'Topic :: Software Development :: Build Tools',
         'Topic :: Software Development :: Libraries :: Python Modules'
     ]
