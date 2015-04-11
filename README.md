@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/eriktaubeneck/ordbok.svg?branch=master)](https://travis-ci.org/eriktaubeneck/ordbok)
 [![Coverage Status](https://img.shields.io/coveralls/eriktaubeneck/ordbok.svg)](https://coveralls.io/r/eriktaubeneck/ordbok)
+[![Code Climate](https://codeclimate.com/github/eriktaubeneck/ordbok/badges/gpa.svg)](https://codeclimate.com/github/eriktaubeneck/ordbok)
 [![Documentation Status](https://readthedocs.org/projects/ordbok/badge/?version=latest)](https://readthedocs.org/projects/ordbok/?badge=latest)
 [![Latest Version](https://pypip.in/version/ordbok/badge.png)](https://pypi.python.org/pypi/ordbok/)
 [![Downloads](https://pypip.in/download/ordbok/badge.png)](https://pypi.python.org/pypi/ordbok/)
