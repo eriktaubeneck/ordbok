@@ -1,4 +1,4 @@
-import sys
+import six
 import os
 import unittest
 import mock
@@ -14,10 +14,12 @@ from ordbok.flask_helper import (
     Flask as OrdbokFlask, OrdbokFlaskConfig, make_config)
 
 
-if sys.version_info[0] < 3:
+if six.PY2:
     open_function_string = '__builtin__.open'
-else:
+elif six.PY3:
     open_function_string = 'builtins.open'
+else:
+    raise RuntimeError('None compatible version of Python.')
 
 fudged_config_files = {
     u'config.yml': u"""

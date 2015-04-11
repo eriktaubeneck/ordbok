@@ -1,13 +1,6 @@
 import os
 import yaml
-import sys
-
-
-def is_str_or_unicode(s):
-    if sys.version_info[0] < 3:
-        return isinstance(s, basestring)
-    else:
-        return isinstance(s, str)
+import six
 
 
 class ConfigFile(object):
@@ -53,7 +46,7 @@ class ConfigFile(object):
                     '{} config key in {} must be uppercase.'.format(
                         key, self.filename)
                 )
-            if (is_str_or_unicode(value) and
+            if (isinstance(value, six.string_types) and
                     value.startswith(self.config.near_miss_key)):
                 config_files = [k for k in config_files_lookup.keys()
                                 if value.startswith(k)]
