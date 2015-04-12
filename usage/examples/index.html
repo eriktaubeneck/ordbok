@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Examples - Ordbok Docs</title>
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="../../css/highlight.css">
+
+  <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.min.js"></script>
+  <script type="text/javascript" src="../../js/highlight.pack.js"></script>
+  <script src="../../js/theme.js"></script>
+
+  <style>
+    body {font-size: 90%;}
+    pre, code {font-size: 100%;}
+    h3, h4, h5, h6 {color: #2980b9; font-weight: 300}
+  </style> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href="../.." class="icon icon-home"> Ordbok Docs</a>
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+      <ul class="current">
+    
+        
+        <span>Home</span>
+            
+                <li class="toctree-l1 ">
+                    <a class="" href="../..">Home</a>
+                    
+                </li>
+            
+                <li class="toctree-l1 ">
+                    <a class="" href="../../get-started">Getting Started</a>
+                    
+                </li>
+            
+        
+
+    
+        
+        <span>Usage</span>
+            
+                <li class="toctree-l1 ">
+                    <a class="" href="../defaults">Defaults</a>
+                    
+                </li>
+            
+                <li class="toctree-l1 ">
+                    <a class="" href="../filetypes">File Types</a>
+                    
+                </li>
+            
+                <li class="toctree-l1 current">
+                    <a class="current" href=".">Examples</a>
+                    
+                        <ul>
+                        
+                            <li class="toctree-l2"><a href="#examples">Examples</a></li>
+                            
+                                <li><a class="toctree-l3" href="#basic-flask-example">Basic Flask Example</a></li>
+                            
+                        
+                        </ul>
+                    
+                </li>
+            
+        
+
+    
+        
+        <span>Contributing</span>
+            
+                <li class="toctree-l1 ">
+                    <a class="" href="../../contribute">Contributing</a>
+                    
+                </li>
+            
+                <li class="toctree-l1 ">
+                    <a class="" href="../../license">License</a>
+                    
+                </li>
+            
+        
+
+    
+</ul>
+
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="icon icon-reorder"></i>
+        <a href="../.."></a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../..">Docs</a> &raquo;</li>
+    <li>Examples</li>
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              <h2 id="examples">Examples</h2>
+<h3 id="basic-flask-example">Basic Flask Example</h3>
+<p><code>app/__init__.py</code>:</p>
+<pre><code>from ordbok.flask_helper import Flask
+
+def create_app():
+    app = Flask(__name__)
+    app.config.load()
+    return app
+
+if __name__ == &quot;__main__&quot;:
+    app = create_app()
+
+</code></pre>
+
+<p><code>app/config/config.yml</code>:</p>
+<pre><code>COMMON: &amp;common
+  SECRET_KEY: 'keep out!'
+  DEBUG: False
+
+DEVELOPMENT: &amp;development
+  &lt;&lt;: *common
+  DEBUG: True
+  SQLALCHEMY_DATABASE_URL: 'ordbok_local_config'
+
+PRODUCTION:
+  &lt;&lt;: *common
+  SECRET_KEY: 'ordbok_env_config'
+  SQLALCHEMY_DATABASE_URL: 'postgres://user:password@localhost:5432/database'
+
+</code></pre>
+
+<p><code>app/config/local_config.yml</code>:</p>
+<pre><code>SQLALCHEMY_DATABASE_URL: 'sqlite:///tmp/database.db'
+SQLALCHEMY_ECHO: True
+</code></pre>
+
+<p>ran with <code>python app/__init__.py</code> will run a Flask app with the following configuration*:</p>
+<pre><code>{ENVIRONMENT: 'development',
+ SECRET_KEY: 'keep out!',
+ DEBUG: True,
+ SQLALCHEMY_DATABASE_URL: 'sqlite:///tmp/database.db',
+ SQLALCHEMY_ECHO: True}
+
+</code></pre>
+
+<p>and ran with (in bash):</p>
+<pre><code>export ORDBOK_ENVIRONMENT=PRODUCTION
+export ORDBOK_SECRET_KEY=7a1fa63d-f33a-11e3-aab5-b88d12179d58
+python app/__init__.py
+</code></pre>
+
+<p>will run a Flask app with the following configuration*:</p>
+<pre><code>{ENVIRONMENT: 'production',
+ SECRET_KEY: '7a1fa63d-f33a-11e3-aab5-b88d12179d58',
+ DEBUG: False,
+ SQLALCHEMY_DATABASE_URL: 'postgres://user:password@localhost:5432/database'}
+
+</code></pre>
+
+<p>*Note: These are not complete configurations; Flask adds a set of defaults on it's own. These only represent the values set from the config files and the environment.</p>
+<p>By setting <code>SQLALCHEMY_DATABASE_URL: 'ordbok_local_config'</code> and <code>SECRET_KEY: 'ordbok_env'</code> in our <code>config/config.yml</code> file, we would raise an exception if those values were not found in <code>config/local_config.yml</code> and the environment, respectively.</p>
+
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../../contribute" class="btn btn-neutral float-right" title="Contributing"/>Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../filetypes" class="btn btn-neutral" title="File Types"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+    <!-- Copyright etc -->
+    </p>
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+	  
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+<div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+        
+      <span><a href="../filetypes" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      <span style="margin-left: 15px"><a href="../../contribute" style="color: #fcfcfc">Next &raquo;</a></span>
+    </span>
+</div>
+</body>
+</html>
