@@ -2,9 +2,10 @@
 As your Flask application grows, you may find that your configuration is coming from all over the place, and it may be difficult to understand what is overriding what. Ordbok adds a strict order of operations as to how the config should be loaded, and tools to specify that a certain variable should be specified later in the chain.
 
 The default configurations has three configuration steps:
-  1. `config.yml`
-  2. `local_config.yml`
-  3. Environmental Variables
+
+1. `config.yml`
+2. `local_config.yml`
+3. Environmental Variables
 
 YAML already has some structure like this, but the idea behind the `local_config.yml` is for settings that may be dependent of a developers own configuration.
 

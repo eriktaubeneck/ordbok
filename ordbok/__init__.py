@@ -1,17 +1,6 @@
 import os
 import yaml
-import sys
-
-
-def is_str_or_unicode(s):
-    if sys.version_info[0] < 3:
-        return isinstance(s, basestring)
-    else:
-        return isinstance(s, str)
-
-
-def open_wrapper(*args, **kwargs):
-    return open(*args, **kwargs)
+import six
 
 
 class ConfigFile(object):
@@ -39,7 +28,7 @@ class ConfigFile(object):
 
     def _load_yaml(self):
         try:
-            with open_wrapper(self.config_file_path) as f:
+            with open(self.config_file_path) as f:
                 return yaml.load(f)
         except IOError:
             pass
@@ -61,7 +50,7 @@ class ConfigFile(object):
                     '{} config key in {} must be uppercase.'.format(
                         key, self.filename)
                 )
-            if (is_str_or_unicode(value) and
+            if (isinstance(value, six.string_types) and
                     value.startswith(self.config.near_miss_key)):
                 config_files = [k for k in config_files_lookup.keys()
                                 if value.startswith(k)]
@@ -150,23 +139,22 @@ class Ordbok(dict):
 
     def set_defaults(self, **kwargs):
         self.config_files = []
-        self.custom_config_files = ['config.yml', 'local_config.yml']
-        self.update_defaults(
-            config_dir=kwargs.get('config_dir', 'config'),
-            custom_config_files=kwargs.get('custom_config_files'),
-            include_env=kwargs.get('include_env', True),
-            near_miss_key=kwargs.get('near_miss_key', 'ordbok'),
-            default_environment=kwargs.get('default_environment', 'development')
-        )
+        self.config_dir = kwargs.get('config_dir', 'config')
+        self.custom_config_files = kwargs.get(
+            'custom_config_files', ['config.yml', 'local_config.yml'])
+        self.include_env = kwargs.get('include_env', True)
+        self.near_miss_key = kwargs.get('near_miss_key', 'ordbok')
+        self.default_environment = kwargs.get(
+            'default_environment', 'development')
 
     def update_defaults(self, **kwargs):
-        self.config_dir = kwargs.get('config_dir') or self.config_dir
-        self.custom_config_files = (kwargs.get('custom_config_files') or
-                                    self.custom_config_files)
-        self.include_env = kwargs.get('include_env') or self.include_env
-        self.near_miss_key = kwargs.get('near_miss_key') or self.near_miss_key
-        self.default_environment = (kwargs.get('default_environment') or
-                                    self.default_environment)
+        self.config_dir = kwargs.get('config_dir', self.config_dir)
+        self.custom_config_files = kwargs.get(
+            'custom_config_files', self.custom_config_files)
+        self.include_env = kwargs.get('include_env', self.include_env)
+        self.near_miss_key = kwargs.get('near_miss_key', self.near_miss_key)
+        self.default_environment = kwargs.get(
+            'default_environment', self.default_environment)
 
     @property
     def config_cwd(self):
@@ -191,7 +179,7 @@ class Ordbok(dict):
 
         self.config_files.extend(
             [ConfigFile(f, self) for f in self.custom_config_files
-             if is_str_or_unicode(f)])
+             if isinstance(f, six.string_types)])
 
         if self.include_env:
             self.config_files.append(ConfigEnv(self))

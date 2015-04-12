@@ -20,7 +20,7 @@ class OrdbokTestCase(unittest.TestCase):
     def setUp(self):
         self.ordbok = Ordbok()
 
-    @fudge.patch('ordbok.open_wrapper')
+    @fudge.patch('six.moves.builtins.open')
     def test_ordbok_default(self, fudged_open):
         fudged_open.is_callable().calls(fake_file_factory(fudged_config_files))
         self.ordbok.load()
@@ -31,7 +31,7 @@ class OrdbokTestCase(unittest.TestCase):
                           'sqlite:///tmp/database.db')
         self.assertTrue(self.ordbok['SQLALCHEMY_ECHO'])
 
-    @fudge.patch('ordbok.open_wrapper')
+    @fudge.patch('six.moves.builtins.open')
     @mock.patch.dict('os.environ', patched_environ)
     def test_ordbok_env(self, fudged_open):
         fudged_open.is_callable().calls(
@@ -48,7 +48,7 @@ class OrdbokTestCase(unittest.TestCase):
         self.assertFalse(self.ordbok.get('SQLALCHEMY_ECHO'))
         self.assertIsNone(self.ordbok.get('REDIS_URL'))
 
-    @fudge.patch('ordbok.open_wrapper')
+    @fudge.patch('six.moves.builtins.open')
     @mock.patch.dict('os.environ', patched_environ)
     def test_ordbok_env_reference(self, fudged_open):
         fudged_config_files_copy = deepcopy(fudged_config_files)
@@ -61,7 +61,7 @@ class OrdbokTestCase(unittest.TestCase):
         self.ordbok.load()
         self.assertEquals(self.ordbok['REDIS_URL'], 'why-not-zoidberg?')
 
-    @fudge.patch('ordbok.open_wrapper')
+    @fudge.patch('six.moves.builtins.open')
     def test_ordbok_find_in_local(self, fudged_open):
         '''
         Test that Ordbok raises an Exception when a value is set to be found
@@ -73,7 +73,7 @@ class OrdbokTestCase(unittest.TestCase):
         with self.assertRaises(Exception):
             self.ordbok.load()
 
-    @fudge.patch('ordbok.open_wrapper')
+    @fudge.patch('six.moves.builtins.open')
     def test_ordbok_copied_local_settings(self, fudged_open):
         fudged_config_files_copy = deepcopy(fudged_config_files)
         fudged_config_files_copy.update({
@@ -86,7 +86,7 @@ class OrdbokTestCase(unittest.TestCase):
         with self.assertRaises(TypeError):
             self.ordbok.load()
 
-    @fudge.patch('ordbok.open_wrapper')
+    @fudge.patch('six.moves.builtins.open')
     def test_ordbok_bad_yaml_local_settings(self, fudged_open):
         fudged_bad_yaml_config_files = deepcopy(fudged_config_files)
         fudged_bad_yaml_config_files.update({
@@ -135,6 +135,42 @@ class OrdbokPrivateConfigFileTestCase(unittest.TestCase):
 
         self.assertEquals(self.ordbok['OAUTH_KEY'], 'super_secret_key')
         self.assertEquals(self.ordbok['OAUTH_SECRET'], 'even_secreter_secret')
+
+
+class OrdbokDefaultsTestCase(OrdbokTestCase):
+    def test_update_all_defaults(self):
+        self.ordbok.update_defaults(
+            config_dir='ordbok_config',
+            custom_config_files=['config.yml'],
+            include_env=False,
+            near_miss_key='ordbok_foo',
+            default_environment='testing',
+        )
+
+    def test_update_config_dir(self):
+        self.ordbok.update_defaults(
+            config_dir='ordbok_config',
+        )
+
+    def test_update_custom_config_files(self):
+        self.ordbok.update_defaults(
+            custom_config_files=['config.yml'],
+        )
+
+    def test_update_include_env(self):
+        self.ordbok.update_defaults(
+            include_env=False,
+        )
+
+    def test_update_near_miss_key(self):
+        self.ordbok.update_defaults(
+            near_miss_key='ordbok_foo',
+        )
+
+    def test_update_default_environment(self):
+        self.ordbok.update_defaults(
+            default_environment='testing',
+        )
 
 
 class FlaskOrdbokTestCase(OrdbokTestCase):

@@ -2,7 +2,15 @@ import os
 import sys
 import yaml
 import simplecrypt
-from ordbok import ConfigFile, open_wrapper
+from ordbok import ConfigFile
+
+
+def open_wrapper(*args, **kwargs):
+    '''
+    This is a dumb hack used so that that these specific open calls
+    can be used with fudge.patch in the tests without messing up Crypto.
+    '''
+    return open(*args, **kwargs)
 
 
 class PrivateConfigFile(ConfigFile):

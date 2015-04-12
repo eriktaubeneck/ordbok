@@ -2,7 +2,6 @@ import os
 from contextlib import contextmanager
 from io import StringIO, BytesIO
 
-open_function_string = 'ordbok.open_wrapper'
 
 fudged_config_files = {
     u'config.yml': u"""
