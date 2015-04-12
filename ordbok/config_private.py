@@ -1,8 +1,8 @@
 import os
-import sys
+import six
 import yaml
 import simplecrypt
-from ordbok import ConfigFile
+from ordbok.config_file import ConfigFile
 
 
 def open_wrapper(*args, **kwargs):
@@ -58,7 +58,7 @@ class PrivateConfigFile(ConfigFile):
 
     def _decrypt_content(self, content):
         content = simplecrypt.decrypt(self.config.private_file_key, content)
-        if sys.version_info[0] < 3:
+        if six.PY2:
             return content
         else:
             return str(content.decode('utf8'))
