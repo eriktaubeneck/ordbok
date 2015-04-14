@@ -109,7 +109,9 @@ class OrdbokPrivateConfigFileTestCase(unittest.TestCase):
                                  self.private_config_file]
         )
 
-    @fudge.patch('ordbok.private.open_wrapper')
+    @unittest.skipIf(os.environ.get('SKIP_ENCRYPT_TEST'),
+                     'as env var to skip lengthy test')
+    @fudge.patch('ordbok.config_private.open_wrapper')
     def test_ordbok_private_config(self, fudged_open):
         fudged_config_files_with_private = deepcopy(fudged_config_files)
         fudged_config_files_with_private.update({
