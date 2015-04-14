@@ -4,8 +4,9 @@ import six
 
 
 class ConfigFile(object):
-    def __init__(self, filename, config=None):
+    def __init__(self, filename, config=None, envs=None):
         self.filename = filename
+        self.envs = envs
         if config:
             self.init_config(config)
 
@@ -34,6 +35,9 @@ class ConfigFile(object):
             pass
 
     def _load(self, config_files_lookup):
+        if self.envs and self.config['ENVIRONMENT'] not in self.envs:
+            return
+
         c = self._load_yaml()
         if not c:
             return

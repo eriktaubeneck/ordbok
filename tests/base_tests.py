@@ -7,6 +7,7 @@ from yaml.scanner import ScannerError
 
 from flask import Flask as BaseFlask
 from ordbok import Ordbok
+from ordbok.config_file import ConfigFile
 from ordbok.config_private import PrivateConfigFile
 from ordbok.flask_helper import (
     Flask as OrdbokFlask, OrdbokFlaskConfig, make_config)
@@ -103,7 +104,8 @@ class OrdbokTestCase(unittest.TestCase):
 
 class OrdbokPrivateConfigFileTestCase(unittest.TestCase):
     def setUp(self):
-        self.private_config_file = PrivateConfigFile('private_config.yml')
+        self.private_config_file = PrivateConfigFile(
+            'private_config.yml', envs=['production'])
         self.ordbok = Ordbok(
             custom_config_files=['config.yml', 'local_config.yml',
                                  self.private_config_file]
@@ -133,10 +135,32 @@ class OrdbokPrivateConfigFileTestCase(unittest.TestCase):
         fudged_open.is_callable().calls(
             fake_file_factory(fudged_config_files_with_private))
 
+        self.ordbok['ENVIRONMENT'] = 'production'
         self.ordbok.load()
 
         self.assertEquals(self.ordbok['OAUTH_KEY'], 'super_secret_key')
         self.assertEquals(self.ordbok['OAUTH_SECRET'], 'even_secreter_secret')
+
+    @fudge.patch('ordbok.config_private.open_wrapper')
+    @mock.patch.object(PrivateConfigFile, '_load_yaml')
+    def test_ordbok_private_config_envs(
+            self, fudged_open, mock_load_yaml):
+        fudged_open.is_callable().calls(
+            fake_file_factory(fudged_config_files))
+        mock_load_yaml.return_value = ''
+        self.ordbok.load()
+        self.assertFalse(mock_load_yaml.called)
+
+    @fudge.patch('ordbok.config_private.open_wrapper')
+    @mock.patch.object(PrivateConfigFile, '_load_yaml')
+    def test_ordbok_private_config_no_envs(
+            self, fudged_open, mock_load_yaml):
+        fudged_open.is_callable().calls(
+            fake_file_factory(fudged_config_files))
+        mock_load_yaml.return_value = ''
+        self.ordbok['ENVIRONMENT'] = 'production'
+        self.ordbok.load()
+        self.assertTrue(mock_load_yaml.called)
 
 
 class OrdbokDefaultsTestCase(OrdbokTestCase):
