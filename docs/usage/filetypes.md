@@ -11,6 +11,40 @@ YAML already has some structure like this, but the idea behind the `local_config
 
 Variables that show up in multiple files will assume the value in the later declaration. Moreover, variables can be declared in earlier files such that they must be found in later file or the environment. This works with the `<near_miss_key>`, which defaults to `ordbok` but can be specified. For example setting `KEY: 'ordbok_local_config'` in `config.yml` will raise an exception if `KEY` isn't specified in `local_config.yml`.
 
+### Private Configuration
+
+Ordbok also has the ability to handle an encrypted config file, which can simplify the process of storing and maintaining secret API keys for your application.
+
+As an example, we add a private config file (e.g. `config/private_config.yml`) to the default configuration:
+
+```
+from ordbok import Ordbok
+private_config_file = PrivateConfigFile(
+    'private_config.yml', envs=['production'])
+config = Ordbok(
+    custom_config_files=['config.yml', 'local_config.yml',
+                         private_config_file]
+)
+config.load()
+```
+
+This configuration only loads the private file in the `'production'` environment, however you can add/change the list of `envs` supplied to the `PrivateConfigFile`.
+
+The `private_config.yml` will contain your unencrypted secret keys, and then encrypted with Ordbok's CLI:
+
+```
+ordbok encrypt <path_to_file> <password>
+```
+
+In your production environment (or anywhere else you wish to use the private files), simply set `PRIVATE_KEY_ORDBOK` in the environment (or you can set the value under that key in your `Ordbok` instance in your application logic) to decrypt the file in that environment. Of course, this key still needs to be handled with care, but this does simplify the process of updating keys and retaining them in your repository without risk of exposing them.
+
+You can also decrypt locally with the CLI:
+
+```
+ordbok decrypt <path_to_file> <password>
+```
+
+
 ###OS Environmental Config
 Config variables can be loaded from the OS environment just like the YAML config files, and is the last in the hierarchy of config variables sources. Config variables are loaded from the OS environment in two ways:
 
