@@ -2,7 +2,7 @@ from __future__ import print_function
 import os
 import argparse
 from ordbok import Ordbok
-from ordbok.private import PrivateConfigFile
+from ordbok.config_private import PrivateConfigFile
 
 
 def main():
@@ -23,7 +23,7 @@ def main():
     filename = args.file
 
     private_config_file = PrivateConfigFile(filename)
-    ordbok = Ordbok(custom_config_class=[private_config_file])
+    ordbok = Ordbok(custom_config_class=[private_config_file], config_dir='')
     ordbok['PRIVATE_KEY_ORDBOK'] = args.key
     private_config_file.init_config(ordbok)
 
