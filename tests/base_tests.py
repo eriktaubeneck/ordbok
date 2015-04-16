@@ -4,63 +4,16 @@ import mock
 import fudge
 from copy import deepcopy
 from yaml.scanner import ScannerError
-from contextlib import contextmanager
-from io import StringIO
 
 from flask import Flask as BaseFlask
 from ordbok import Ordbok
+from ordbok.config_private import PrivateConfigFile
 from ordbok.flask_helper import (
     Flask as OrdbokFlask, OrdbokFlaskConfig, make_config)
 
-
-fudged_config_files = {
-    u'config.yml': u"""
-COMMON: &common
-  SECRET_KEY: 'keep out!'
-  DEBUG: False
-
-DEVELOPMENT: &development
-  <<: *common
-  DEBUG: True
-  SQLALCHEMY_DATABASE_URL: 'ordbok_local_config'
-  TEST_BOOLEAN_VAR: 'ordbok_local_config'
-
-PRODUCTION:
-  <<: *common
-  SECRET_KEY: 'ordbok_env_config'
-  SQLALCHEMY_DATABASE_URL: 'postgres://user:password@localhost:5432/database'
-""",
-    u'local_config.yml': u"""
-SQLALCHEMY_DATABASE_URL: 'sqlite:///tmp/database.db'
-SQLALCHEMY_ECHO: True
-TEST_BOOLEAN_VAR: False
-"""}
-
-fudged_config_no_local_file = {
-    key: value for key, value in fudged_config_files.items()
-    if key == u'config.yml'
-}
-
-patched_environ = {
-    u'ORDBOK_ENVIRONMENT': u'production',
-    u'ORDBOK_SECRET_KEY': u'7a1fa63d-f33a-11e3-aab5-b88d12179d58',
-    u'ORDBOK_TEST_BOOLEAN': u'True',
-    u'ORDBOK_TEST_INT': u'42',
-    u'REDISCLOUD_URL': u'why-not-zoidberg?',
-}
-
-
-def fake_file_factory(fudged_config_files):
-    @contextmanager
-    def fake_file(filename):
-        content = fudged_config_files.get(
-            os.path.relpath(
-                filename,
-                os.path.join(os.getcwd(), 'config')),
-            u'')
-
-        yield StringIO(content)
-    return fake_file
+from tests.files import (
+    fudged_config_files, fudged_config_no_local_file,
+    patched_environ, fake_file_factory)
 
 
 class OrdbokTestCase(unittest.TestCase):
@@ -146,6 +99,67 @@ class OrdbokTestCase(unittest.TestCase):
             fudged_bad_yaml_config_files))
         with self.assertRaises(ScannerError):
             self.ordbok.load()
+
+
+class OrdbokPrivateConfigFileTestCase(unittest.TestCase):
+    def setUp(self):
+        self.private_config_file = PrivateConfigFile(
+            'private_config.yml', envs=['production'])
+        self.ordbok = Ordbok(
+            custom_config_files=['config.yml', 'local_config.yml',
+                                 self.private_config_file]
+        )
+
+    @unittest.skipIf(os.environ.get('SKIP_ENCRYPT_TEST'),
+                     'as env var to skip lengthy test')
+    @fudge.patch('ordbok.config_private.open_wrapper')
+    def test_ordbok_private_config(self, fudged_open):
+        fudged_config_files_with_private = deepcopy(fudged_config_files)
+        fudged_config_files_with_private.update({
+            u'private_config.yml': u"""
+            OAUTH_KEY: 'super_secret_key'
+            OAUTH_SECRET: 'even_secreter_secret'
+            """,
+        })
+
+        # set directly instead of completely rewriting 'config.yml'
+        self.ordbok['PRIVATE_KEY_ORDBOK'] = 'foobarbaz'
+        self.private_config_file.init_config(self.ordbok)
+
+        encrypted_content = self.private_config_file._encrypt_content(
+            fudged_config_files_with_private[u'private_config.yml'])
+        fudged_config_files_with_private.update({
+            u'private_config.yml.private': encrypted_content,
+        })
+        fudged_open.is_callable().calls(
+            fake_file_factory(fudged_config_files_with_private))
+
+        self.ordbok['ENVIRONMENT'] = 'production'
+        self.ordbok.load()
+
+        self.assertEquals(self.ordbok['OAUTH_KEY'], 'super_secret_key')
+        self.assertEquals(self.ordbok['OAUTH_SECRET'], 'even_secreter_secret')
+
+    @fudge.patch('ordbok.config_private.open_wrapper')
+    @mock.patch.object(PrivateConfigFile, '_load_yaml')
+    def test_ordbok_private_config_envs(
+            self, fudged_open, mock_load_yaml):
+        fudged_open.is_callable().calls(
+            fake_file_factory(fudged_config_files))
+        mock_load_yaml.return_value = ''
+        self.ordbok.load()
+        self.assertFalse(mock_load_yaml.called)
+
+    @fudge.patch('ordbok.config_private.open_wrapper')
+    @mock.patch.object(PrivateConfigFile, '_load_yaml')
+    def test_ordbok_private_config_no_envs(
+            self, fudged_open, mock_load_yaml):
+        fudged_open.is_callable().calls(
+            fake_file_factory(fudged_config_files))
+        mock_load_yaml.return_value = ''
+        self.ordbok['ENVIRONMENT'] = 'production'
+        self.ordbok.load()
+        self.assertTrue(mock_load_yaml.called)
 
 
 class OrdbokDefaultsTestCase(OrdbokTestCase):

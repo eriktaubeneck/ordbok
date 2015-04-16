@@ -24,6 +24,18 @@ _<a href="http://droemmaskin.deviantart.com/art/Svenska-Akademiens-ordbok-197812
 
 Ordbok is designed to allow users to define a hierarchy of YAML configuration files and specify environments. The default configuration has three tiers: `config.yml`, `local_config.yml`, and Environmental Variables. The later tiers override the earlier ones, and earlier configurations can explicitly require certain variables to be defined in a later one. This can be particularly useful when you expect, say, certain variables to be specified in the environment on a production server and want to fail hard and explicitly when that variable isn't present.
 
+### Private Configuration
+
+Ordbok also has the ability to handle an encrypted config file, which can simplify the process of storing and maintaining secret API keys for your application. A config file can be encrypted with Ordbok's CLI:
+
+```
+ordbok encrypt <path_to_file> <password>
+```
+
+In your production environment (or anywhere else you wish to use the private files), simply set `PRIVATE_KEY_ORDBOK` in the environment (or you can set the value under that key in your `Ordbok` instance in your application logic) to decrypt the file in that environment. Of course, this key still needs to be handled with care, but this does simplify the process of updating keys and retaining them in your repository without risk of exposing them.
+
+This is not setup with the default configuration, but you can see the docs on [File Types](http://ordbok.readthedocs.org/en/latest/usage/filetypes/) for more details.
+
 ## Installation
 
 Inside a [virtualenv](http://virtualenv.readthedocs.org/en/latest/) run
