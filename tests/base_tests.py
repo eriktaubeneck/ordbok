@@ -5,10 +5,10 @@ import fudge
 from copy import deepcopy
 from yaml.scanner import ScannerError
 
-from flask import Flask as BaseFlask
+from flask import Flask
+
+from ordbok.flask_helper import FlaskOrdbok
 from ordbok import Ordbok, PrivateConfigFile
-from ordbok.flask_helper import (
-    Flask as OrdbokFlask, OrdbokFlaskConfig, make_config)
 
 from tests.files import (
     fudged_config_files, fudged_config_no_local_file,
@@ -19,8 +19,16 @@ class OrdbokTestCase(unittest.TestCase):
     def setUp(self):
         self.ordbok = Ordbok()
 
+    def test_ordbok_defaults(self):
+        self.assertEqual(self.ordbok.config_files,
+                         ['config.yml', 'local_config.yml'])
+        self.assertEqual(self.ordbok.config_dir, 'config')
+        self.assertTrue(self.ordbok.include_env)
+        self.assertEqual(self.ordbok.namespace, 'ordbok')
+        self.assertEqual(self.ordbok.default_environment, 'development')
+
     @fudge.patch('six.moves.builtins.open')
-    def test_ordbok_default(self, fudged_open):
+    def test_ordbok_load(self, fudged_open):
         fudged_open.is_callable().calls(fake_file_factory(fudged_config_files))
         self.ordbok.load()
         self.assertEquals(self.ordbok['ENVIRONMENT'], 'development')
@@ -105,8 +113,8 @@ class OrdbokPrivateConfigFileTestCase(unittest.TestCase):
         self.private_config_file = PrivateConfigFile(
             'private_config.yml', envs=['production'])
         self.ordbok = Ordbok(
-            custom_config_files=['config.yml', 'local_config.yml',
-                                 self.private_config_file]
+            config_files=['config.yml', 'local_config.yml',
+                          self.private_config_file]
         )
 
     @unittest.skipIf(os.environ.get('SKIP_ENCRYPT_TEST'),
@@ -161,79 +169,63 @@ class OrdbokPrivateConfigFileTestCase(unittest.TestCase):
         self.assertTrue(mock_load_yaml.called)
 
 
-class OrdbokDefaultsTestCase(OrdbokTestCase):
+class OrdbokDefaultsTestCase(unittest.TestCase):
     def test_update_all_defaults(self):
-        self.ordbok.update_defaults(
-            config_dir='ordbok_config',
-            custom_config_files=['config.yml'],
-            include_env=False,
-            near_miss_key='ordbok_foo',
-            default_environment='testing',
-        )
+        Ordbok(config_dir='ordbok_config',
+               config_files=['config.yml'],
+               include_env=False,
+               namespace='ordbok_foo',
+               default_environment='testing',)
 
     def test_update_config_dir(self):
-        self.ordbok.update_defaults(
-            config_dir='ordbok_config',
-        )
+        Ordbok(config_dir='ordbok_config',)
 
-    def test_update_custom_config_files(self):
-        self.ordbok.update_defaults(
-            custom_config_files=['config.yml'],
-        )
+    def test_update_config_files(self):
+        Ordbok(config_files=['config.yml'],)
 
     def test_update_include_env(self):
-        self.ordbok.update_defaults(
-            include_env=False,
-        )
+        Ordbok(include_env=False,)
 
-    def test_update_near_miss_key(self):
-        self.ordbok.update_defaults(
-            near_miss_key='ordbok_foo',
-        )
+    def test_update_namespace(self):
+        Ordbok(namespace='ordbok_foo',)
 
     def test_update_default_environment(self):
-        self.ordbok.update_defaults(
-            default_environment='testing',
-        )
+        Ordbok(default_environment='testing',)
 
 
 class FlaskOrdbokTestCase(OrdbokTestCase):
     def setUp(self):
-        self.app = OrdbokFlask(__name__)
-        self.ordbok = self.app.config
-        self.ordbok.root_path = os.getcwd()  # the fudged files are here
+        self.app = Flask(os.getcwd())  # fudged files think they are in cwd
+        self.ordbok = FlaskOrdbok(app=self.app)
 
-    def test_flask_helper(self):
-        self.assertIsInstance(self.app.config, OrdbokFlaskConfig)
-
-    def test_flask_reloader(self):
-        BaseFlask.run = mock.MagicMock(return_value=True)
+    @mock.patch.object(Flask, 'run')
+    def test_flask_reloader(self, fudged_flask_run):
         self.ordbok.load()
         self.app.debug = True
-        self.app.run()
-        BaseFlask.run.assert_called()
-        BaseFlask.run.assert_called_with(
+        self.ordbok.app_run(self.app)
+        fudged_flask_run.assert_called()
+        fudged_flask_run.assert_called_with(
             extra_files=self.ordbok.config_file_names)
 
-    def test_flask_reloader_debug_off(self):
-        BaseFlask.run = mock.MagicMock(return_value=True)
+    @mock.patch.object(Flask, 'run')
+    def test_flask_reloader_debug_off(self, fudged_flask_run):
         self.ordbok.load()
-        self.app.run()
-        BaseFlask.run.assert_called()
-        BaseFlask.run.assert_called_with()  # no extra files
+        self.ordbok.app_run(self.app)
+        fudged_flask_run.assert_called()
+        fudged_flask_run.assert_called_with()  # no extra files
 
-    def test_flask_reloader_use_reloader_false(self):
-        BaseFlask.run = mock.MagicMock(return_value=True)
+    @mock.patch.object(Flask, 'run')
+    def test_flask_reloader_use_reloader_false(self, fudged_flask_run):
         self.ordbok.load()
-        self.app.run(use_reloader=False)
-        BaseFlask.run.assert_called()
-        BaseFlask.run.assert_called_with(use_reloader=False)  # no extra files
+        self.ordbok.app_run(self.app, use_reloader=False)
+        fudged_flask_run.assert_called()
+        fudged_flask_run.assert_called_with(use_reloader=False)  # no extra files
 
 
-class SpecialFlaskOrbokTestCase(unittest.TestCase):
+class SpecialFlaskOrdbokTestCase(unittest.TestCase):
     def setUp(self):
-        self.app = OrdbokFlask(__name__)
-        self.ordbok = self.app.config
+        self.app = Flask(__name__)
+        self.ordbok = FlaskOrdbok(app=self.app)
 
     def test_root_path(self):
         """
@@ -242,15 +234,3 @@ class SpecialFlaskOrbokTestCase(unittest.TestCase):
         this for the the tests.
         """
         self.assertEquals(self.app.root_path, self.ordbok.config_cwd)
-
-
-class BaseFlaskOrdbokTestCase(unittest.TestCase):
-    def setUp(self):
-        BaseFlask.config_class = OrdbokFlaskConfig
-        BaseFlask.make_config = make_config
-        self.app = BaseFlask(__name__)
-        self.ordbok = self.app.config
-        self.ordbok.root_path = os.getcwd()  # the fudged files are here
-
-    def test_flask_helper(self):
-        self.assertIsInstance(self.app.config, OrdbokFlaskConfig)

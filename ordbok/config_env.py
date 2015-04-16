@@ -6,7 +6,7 @@ from .config_file import ConfigFile
 class ConfigEnv(ConfigFile):
     def __init__(self, config):
         self.config = config
-        self.keyword = '{}_env_config'.format(self.config.near_miss_key)
+        self.keyword = '{}_env_config'.format(self.config.namespace)
         self.required_keys = []
         self.keyword_lookup = {}
         self.loaded = False
@@ -20,9 +20,9 @@ class ConfigEnv(ConfigFile):
 
     def _load(self, _):
         environ = {
-            key.replace(self.config.near_miss_key.upper()+'_', ''): value
+            key.replace(self.config.namespace.upper()+'_', ''): value
             for key, value in os.environ.items() if value and
-            key.startswith(self.config.near_miss_key.upper())}
+            key.startswith(self.config.namespace.upper())}
         for key, value in environ.items():
             self.config[key] = yaml.load(value)
 

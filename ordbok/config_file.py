@@ -4,16 +4,14 @@ import six
 
 
 class ConfigFile(object):
-    def __init__(self, filename, config=None, envs=None):
+    def __init__(self, filename, envs=None):
         self.filename = filename
         self.envs = envs
-        if config:
-            self.init_config(config)
 
     def init_config(self, config):
         self.config = config
         self.keyword = '{}_{}'.format(
-            self.config.near_miss_key, os.path.splitext(self.filename)[0])
+            self.config.namespace, os.path.splitext(self.filename)[0])
         self.required_keys = []
         self.config_file_path = os.path.join(
             self.config.config_cwd, self.config.config_dir, self.filename)
@@ -55,7 +53,7 @@ class ConfigFile(object):
                         key, self.filename)
                 )
             if (isinstance(value, six.string_types) and
-                    value.startswith(self.config.near_miss_key)):
+                    value.startswith(self.config.namespace)):
                 config_files = [k for k in config_files_lookup.keys()
                                 if value.startswith(k)]
                 if len(config_files) == 0:
