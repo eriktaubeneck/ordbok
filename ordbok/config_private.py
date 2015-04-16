@@ -2,7 +2,7 @@ import os
 import six
 import yaml
 import simplecrypt
-from ordbok.config_file import ConfigFile
+from .config_file import ConfigFile
 
 
 def open_wrapper(*args, **kwargs):

@@ -1,6 +1,6 @@
 import os
 import yaml
-from ordbok.config_file import ConfigFile
+from .config_file import ConfigFile
 
 
 class ConfigEnv(ConfigFile):

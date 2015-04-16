@@ -6,8 +6,7 @@ from copy import deepcopy
 from yaml.scanner import ScannerError
 
 from flask import Flask as BaseFlask
-from ordbok import Ordbok
-from ordbok.config_private import PrivateConfigFile
+from ordbok import Ordbok, PrivateConfigFile
 from ordbok.flask_helper import (
     Flask as OrdbokFlask, OrdbokFlaskConfig, make_config)
 

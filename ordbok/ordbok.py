@@ -1,7 +1,7 @@
 import os
 import six
-from ordbok.config_file import ConfigFile
-from ordbok.config_env import ConfigEnv
+from .config_file import ConfigFile
+from .config_env import ConfigEnv
 
 
 class Ordbok(dict):

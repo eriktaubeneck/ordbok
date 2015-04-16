@@ -1,4 +1,4 @@
-from . import Ordbok
+from .ordbok import Ordbok
 
 from flask import Flask as BaseFlask, Config as BaseConfig
 
