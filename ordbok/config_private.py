@@ -16,7 +16,9 @@ def open_wrapper(*args, **kwargs):
 class PrivateConfigFile(ConfigFile):
     def _load_yaml(self):
         content = self._load_and_decrypt_file()
-        return yaml.load(content)
+        c = yaml.load(content)
+        self._validate_yaml_content(c)
+        return c
 
     def _load_encrypted_file(self):
         try:

@@ -25,12 +25,86 @@ class ConfigFile(object):
     def add_required_key(self, key, value=None):
         self.required_keys.append(key)
 
+    def _validate_yaml_content(self, c):
+        if not isinstance(c, dict):
+            raise TypeError(
+                u'YAML file {} did not load as a dict.  Please '
+                u'check its formatting.'.format(self.config_file_path))
+
     def _load_yaml(self):
         try:
             with open(self.config_file_path) as f:
-                return yaml.load(f)
+                c = yaml.load(f)
+                self._validate_yaml_content(c)
+                return c
         except IOError:
+            return None
+
+    def _validate_key(self, key):
+        if not key.isupper():
+            raise Exception('{} config key in {} must be uppercase.'.format(
+                key, self.filename)
+            )
+
+    def _referenced_config_file(self, key, value, config_files_lookup):
+        if not isinstance(value, six.string_types):
+            return None
+        if not value.startswith(self.config.namespace):
+            return None
+
+        referenced_config_files = [k for k in config_files_lookup.keys()
+                                   if value.startswith(k)]
+
+        if len(referenced_config_files) == 0:
+            raise Exception(
+                '{0} is required to be specified in {1} '
+                'but {1} was not registered with Ordbok'.format(
+                    key, self.config_file_path))
+        elif len(referenced_config_files) > 1:
+            raise Exception(
+                'Config file names are ambiguous. Please make them '
+                'distinct: {}'.format(referenced_config_files)
+            )
+        else:
+            referenced_config_file = referenced_config_files[0]
+            if referenced_config_file == self.keyword:
+                raise Exception(
+                    'Cannot require {} required Ordbok config '
+                    'variables in their own file.'.format(
+                        self.filename))
+            elif config_files_lookup[referenced_config_file].loaded:
+                raise Exception(
+                    'Cannot specify {0} required Ordbok config '
+                    'variables in {1}, {0} is loaded before '
+                    '{1}.'.format(
+                        config_files_lookup[referenced_config_file].filename,
+                        self.filename))
+            return referenced_config_file
+
+    def _validate_nested_keys(self, d):
+        for key, value in d.items():
+            if isinstance(value, six.string_types):
+                if value.startswith(self.config.namespace):
+                    raise Exception(
+                        'Cannot specifiy {} required Ordbok config variable '
+                        'in a nested config dictionary'.format(value)
+                    )
+            if isinstance(value, dict):
+                for k, v in self._validate_nested_keys(value):
+                    yield
+            yield
+
+    def _process_key_value(self, key, value, config_files_lookup):
+        if isinstance(value, dict):
             pass
+        self._validate_key(key)
+        referenced_config_file = self._referenced_config_file(
+            key, value, config_files_lookup)
+        if referenced_config_file:
+            config_files_lookup[referenced_config_file].add_required_key(
+                key, value)
+        else:
+            self.config[key] = value
 
     def _load(self, config_files_lookup):
         if self.envs and self.config['ENVIRONMENT'] not in self.envs:
@@ -40,48 +114,10 @@ class ConfigFile(object):
         if not c:
             return
 
-        if not isinstance(c, dict):
-            raise TypeError(u'YAML file {} did not load as a dict.  Please '
-                            u'check its formatting.'.format(
-                                self.config_file_path))
-
         c = c.get(self.config['ENVIRONMENT'].upper(), c)
+
         for key, value in c.items():
-            if not key.isupper():
-                raise Exception(
-                    '{} config key in {} must be uppercase.'.format(
-                        key, self.filename)
-                )
-            if (isinstance(value, six.string_types) and
-                    value.startswith(self.config.namespace)):
-                config_files = [k for k in config_files_lookup.keys()
-                                if value.startswith(k)]
-                if len(config_files) == 0:
-                    raise Exception(
-                        '{0} is required to be specified in {1} '
-                        'but {1} was not registered with Ordbok'.format(
-                            key, self.config_file_path))
-                elif len(config_files) > 1:
-                    raise Exception(
-                        'Config file names are ambiguous. Please make them '
-                        'distinct: {}'.format(config_files)
-                    )
-                config_file = config_files[0]
-                if config_file == self.keyword:
-                    raise Exception(
-                        'Cannot require {} required Ordbok config '
-                        'variables in their own file.'.format(
-                            self.filename))
-                elif config_files_lookup[config_file].loaded:
-                    raise Exception(
-                        'Cannot specify {0} required Ordbok config '
-                        'variables in {1}, {0} is loaded before '
-                        '{1}.'.format(
-                            config_files_lookup[config_file].filename,
-                            self.filename))
-                config_files_lookup[config_file].add_required_key(key, value)
-            else:
-                self.config[key] = value
+            self._process_key_value(key, value, config_files_lookup)
 
     def _check_required_keys(self, custom_exception_gen=None):
         for key in self.required_keys:
