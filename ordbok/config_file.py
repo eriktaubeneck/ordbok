@@ -18,7 +18,8 @@ class ConfigFile(object):
         self.loaded = False
 
     def load(self, config_files_lookup):
-        self._load(config_files_lookup)
+        self.config_files_lookup = config_files_lookup
+        self._load()
         self._check_required_keys()
         self.loaded = True
 
@@ -46,38 +47,33 @@ class ConfigFile(object):
                 key, self.filename)
             )
 
-    def _referenced_config_file(self, key, value, config_files_lookup):
+    def _referenced_config_file(self, key, value):
         if not isinstance(value, six.string_types):
             return None
         if not value.startswith(self.config.namespace):
             return None
 
-        referenced_config_files = [k for k in config_files_lookup.keys()
+        referenced_config_files = [k for k in self.config_files_lookup.keys()
                                    if value.startswith(k)]
 
         if len(referenced_config_files) == 0:
-            raise Exception(
-                '{0} is required to be specified in {1} '
-                'but {1} was not registered with Ordbok'.format(
-                    key, self.config_file_path))
+            raise Exception('{0} is required to be specified in {1} but {1} '
+                            'was not registered with Ordbok'.format(
+                                key, self.config_file_path))
         elif len(referenced_config_files) > 1:
-            raise Exception(
-                'Config file names are ambiguous. Please make them '
-                'distinct: {}'.format(referenced_config_files)
-            )
+            raise Exception('Config file names are ambiguous. Please make them'
+                            ' distinct: {}'.format(referenced_config_files))
         else:
             referenced_config_file = referenced_config_files[0]
             if referenced_config_file == self.keyword:
                 raise Exception(
-                    'Cannot require {} required Ordbok config '
-                    'variables in their own file.'.format(
-                        self.filename))
-            elif config_files_lookup[referenced_config_file].loaded:
+                    'Cannot require {} required Ordbok config variables in '
+                    'their own file.'.format(self.filename))
+            elif self.config_files_lookup[referenced_config_file].loaded:
                 raise Exception(
-                    'Cannot specify {0} required Ordbok config '
-                    'variables in {1}, {0} is loaded before '
-                    '{1}.'.format(
-                        config_files_lookup[referenced_config_file].filename,
+                    'Cannot specify {0} required Ordbok config variables in '
+                    '{1}, {0} is loaded before {1}.'.format(
+                        self.config_files_lookup[referenced_config_file].filename,
                         self.filename))
             return referenced_config_file
 
@@ -94,19 +90,18 @@ class ConfigFile(object):
                     yield
             yield
 
-    def _process_key_value(self, key, value, config_files_lookup):
+    def _process_key_value(self, key, value):
         if isinstance(value, dict):
             pass
         self._validate_key(key)
-        referenced_config_file = self._referenced_config_file(
-            key, value, config_files_lookup)
+        referenced_config_file = self._referenced_config_file(key, value)
         if referenced_config_file:
-            config_files_lookup[referenced_config_file].add_required_key(
+            self.config_files_lookup[referenced_config_file].add_required_key(
                 key, value)
         else:
             self.config[key] = value
 
-    def _load(self, config_files_lookup):
+    def _load(self):
         if self.envs and self.config['ENVIRONMENT'] not in self.envs:
             return
 
@@ -117,7 +112,7 @@ class ConfigFile(object):
         c = c.get(self.config['ENVIRONMENT'].upper(), c)
 
         for key, value in c.items():
-            self._process_key_value(key, value, config_files_lookup)
+            self._process_key_value(key, value)
 
     def _check_required_keys(self, custom_exception_gen=None):
         for key in self.required_keys:

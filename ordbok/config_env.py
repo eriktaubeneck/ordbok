@@ -18,7 +18,7 @@ class ConfigEnv(ConfigFile):
             self.keyword_lookup[key] = value.replace(self.keyword+'_', '')
             self.required_keys.append(key)
 
-    def _load(self, _):
+    def _load(self):
         environ = {
             key.replace(self.config.namespace.upper()+'_', ''): value
             for key, value in os.environ.items() if value and
