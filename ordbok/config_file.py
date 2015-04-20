@@ -1,6 +1,11 @@
 import os
 import yaml
 import six
+from .exceptions import (
+    OrdbokLowercaseKeyException, OrdbokMissingConfigFileException,
+    OrdbokAmbiguousConfigFileException, OrdbokSelfReferenceException,
+    OrdbokPreviouslyLoadedException, OrdbokNestedRequiredKeyException,
+    OrdbokMissingKeyException)
 
 
 class ConfigFile(object):
@@ -43,9 +48,7 @@ class ConfigFile(object):
 
     def _validate_key(self, key):
         if not key.isupper():
-            raise Exception('{} config key in {} must be uppercase.'.format(
-                key, self.filename)
-            )
+            raise OrdbokLowercaseKeyException(key, self)
 
     def _referenced_config_file(self, key, value):
         if not isinstance(value, six.string_types):
@@ -57,34 +60,25 @@ class ConfigFile(object):
                                    if value.startswith(k)]
 
         if len(referenced_config_files) == 0:
-            raise Exception('{0} is required to be specified in {1} but {1} '
-                            'was not registered with Ordbok'.format(
-                                key, self.config_file_path))
+            raise OrdbokMissingConfigFileException(key, self)
         elif len(referenced_config_files) > 1:
-            raise Exception('Config file names are ambiguous. Please make them'
-                            ' distinct: {}'.format(referenced_config_files))
-        else:
-            referenced_config_file = referenced_config_files[0]
-            if referenced_config_file == self.keyword:
-                raise Exception(
-                    'Cannot require {} required Ordbok config variables in '
-                    'their own file.'.format(self.filename))
-            elif self.config_files_lookup[referenced_config_file].loaded:
-                raise Exception(
-                    'Cannot specify {0} required Ordbok config variables in '
-                    '{1}, {0} is loaded before {1}.'.format(
-                        self.config_files_lookup[referenced_config_file].filename,
-                        self.filename))
-            return referenced_config_file
+            raise OrdbokAmbiguousConfigFileException(referenced_config_files)
+
+        referenced_config_file = referenced_config_files[0]
+
+        if referenced_config_file == self.keyword:
+            raise OrdbokSelfReferenceException(self)
+        elif self.config_files_lookup[referenced_config_file].loaded:
+            raise OrdbokPreviouslyLoadedException(
+                self.config_files_lookup, referenced_config_file, self)
+
+        return referenced_config_file
 
     def _validate_nested_keys(self, d):
         for key, value in d.items():
             if isinstance(value, six.string_types):
                 if value.startswith(self.config.namespace):
-                    raise Exception(
-                        'Cannot specifiy {} required Ordbok config variable '
-                        'in a nested config dictionary'.format(value)
-                    )
+                    raise OrdbokNestedRequiredKeyException(value)
             if isinstance(value, dict):
                 for k, v in self._validate_nested_keys(value):
                     yield
@@ -120,6 +114,4 @@ class ConfigFile(object):
                 if custom_exception_gen:
                     raise custom_exception_gen(self, key)
                 else:
-                    raise Exception(
-                        '{} config key should be specified in {} '
-                        'but was not found.'.format(key, self.filename))
+                    raise OrdbokMissingKeyException(key, self)
