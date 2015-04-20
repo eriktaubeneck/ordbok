@@ -2,6 +2,7 @@ import os
 import six
 from .util import create_config_file
 from .config_env import ConfigEnv
+from .exceptions import OrdbokMissingPrivateKeyException
 
 
 class Ordbok(dict):
@@ -65,9 +66,5 @@ class Ordbok(dict):
             )
         )
         if not key:
-            raise Exception(
-                'PRIVATE_KEY_ORDBOK config variable not found. '
-                'Please set in configuration loaded before PrivateConfigFile '
-                'or in the OS environment as PRIVATE_KEY_ORDBOK.'
-            )
+            raise OrdbokMissingPrivateKeyException
         return key

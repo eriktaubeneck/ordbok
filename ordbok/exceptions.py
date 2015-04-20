@@ -35,7 +35,7 @@ class OrdbokSelfReferenceException(OrdbokKeyException):
 
 class OrdbokAmbiguousConfigFileException(OrdbokException):
     def __init__(self, referenced_config_files):
-        self.referenced_config_Files
+        self.referenced_config_files = referenced_config_files
 
     def __repr__(self):
         return ('Config file names are ambiguous. Please make them '
@@ -62,3 +62,21 @@ class OrdbokNestedRequiredKeyException(OrdbokException):
     def __repr__(self):
         return ('Cannot specifiy {} required Ordbok config variable '
                 'in a nested config dictionary'.format(self.value))
+
+
+class OrdbokMissingPrivateKeyException(OrdbokException):
+    def __repr__(self):
+        return ('PRIVATE_KEY_ORDBOK config variable not found. '
+                'Please set in configuration loaded before PrivateConfigFile '
+                'or in the OS environment as PRIVATE_KEY_ORDBOK.')
+
+
+class OrdbokTargetedEnvKeyException(OrdbokException):
+    def __init__(self, key, env_key):
+        self.key = key
+        self.env_key = env_key
+
+    def __repr__(self):
+        return (
+            '{} config key should be specified in the environment as '
+            '{} but was not found.'.format(self.key, self.env_key))

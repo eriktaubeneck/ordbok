@@ -1,6 +1,7 @@
 import os
 import yaml
 from .config_file import ConfigFile
+from .exceptions import OrdbokTargetedEnvKeyException
 
 
 class ConfigEnv(ConfigFile):
@@ -29,9 +30,7 @@ class ConfigEnv(ConfigFile):
         for key, env_key in self.keyword_lookup.items():
             value = os.environ.get(env_key.upper(), None)
             if value is None:
-                raise Exception(
-                    '{} config key should be specified in the environment as '
-                    '{} but was not found.'.format(key, env_key))
+                raise OrdbokTargetedEnvKeyException(key, env_key)
             self.config[key] = value
 
     def _check_required_keys(self):

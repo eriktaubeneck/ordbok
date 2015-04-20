@@ -8,7 +8,15 @@ from yaml.scanner import ScannerError
 from flask import Flask
 
 from ordbok.flask_helper import FlaskOrdbok
-from ordbok import Ordbok, PrivateConfigFile
+from ordbok import Ordbok, ConfigFile, PrivateConfigFile
+from ordbok.util import create_config_file
+from ordbok.exceptions import (
+    OrdbokLowercaseKeyException, OrdbokMissingConfigFileException,
+    OrdbokAmbiguousConfigFileException, OrdbokSelfReferenceException,
+    OrdbokPreviouslyLoadedException, OrdbokNestedRequiredKeyException,
+    OrdbokMissingKeyException, OrdbokMissingPrivateKeyException,
+    OrdbokTargetedEnvKeyException)
+
 
 from tests.files import (
     fudged_config_files, fudged_config_no_local_file,
@@ -107,6 +115,134 @@ class OrdbokTestCase(unittest.TestCase):
         with self.assertRaises(ScannerError):
             self.ordbok.load()
 
+    @fudge.patch('six.moves.builtins.open')
+    def test_missing_config_file_ordbok_load(self, fudged_open):
+        fudged_open.is_callable().calls(fake_file_factory(fudged_config_files))
+        fudged_config_files_copy = deepcopy(fudged_config_files)
+        fudged_config_files_copy.update({
+            u'config.yml': u"""
+            FOO: 'ordbok_foo_config'
+            """})
+        fudged_open.is_callable().calls(
+            fake_file_factory(fudged_config_files_copy))
+        with self.assertRaises(OrdbokMissingConfigFileException):
+            self.ordbok.load()
+
+    @fudge.patch('six.moves.builtins.open')
+    def test_ambiguous_config_file_ordbok_load(self, fudged_open):
+        fudged_open.is_callable().calls(fake_file_factory(fudged_config_files))
+        fudged_config_files_copy = deepcopy(fudged_config_files)
+        fudged_config_files_copy.update({
+            u'local_con.yml': u"""
+            FOO: 'bar'
+            """})
+        self.ordbok.config_files.append('local_con.yml')
+        fudged_open.is_callable().calls(
+            fake_file_factory(fudged_config_files_copy))
+        with self.assertRaises(OrdbokAmbiguousConfigFileException):
+            self.ordbok.load()
+
+    @fudge.patch('six.moves.builtins.open')
+    def test_self_reference_ordbok_load(self, fudged_open):
+        fudged_open.is_callable().calls(fake_file_factory(fudged_config_files))
+        fudged_config_files_copy = deepcopy(fudged_config_files)
+        fudged_config_files_copy.update({
+            u'local_config.yml': u"""
+            FOO: 'ordbok_local_config'
+            """})
+        fudged_open.is_callable().calls(
+            fake_file_factory(fudged_config_files_copy))
+        with self.assertRaises(OrdbokSelfReferenceException):
+            self.ordbok.load()
+
+    @fudge.patch('six.moves.builtins.open')
+    def test_previously_loaded_ordbok_load(self, fudged_open):
+        fudged_open.is_callable().calls(fake_file_factory(fudged_config_files))
+        fudged_config_files_copy = deepcopy(fudged_config_files)
+        fudged_config_files_copy.update({
+            u'local_config.yml': u"""
+            FOO: 'ordbok_config'
+            """})
+        fudged_open.is_callable().calls(
+            fake_file_factory(fudged_config_files_copy))
+        with self.assertRaises(OrdbokPreviouslyLoadedException):
+            self.ordbok.load()
+
+    @fudge.patch('six.moves.builtins.open')
+    def test_nested_keys_ordbok_load(self, fudged_open):
+        fudged_open.is_callable().calls(fake_file_factory(fudged_config_files))
+        fudged_config_files_copy = deepcopy(fudged_config_files)
+        fudged_config_files_copy.update({
+            u'config.yml': u"""
+            FOO:
+                BAZ:
+                    BAR:
+                        BAZZZZ: 'ordbok_local_config'
+            """})
+        fudged_open.is_callable().calls(
+            fake_file_factory(fudged_config_files_copy))
+        with self.assertRaises(OrdbokNestedRequiredKeyException):
+            self.ordbok.load()
+
+    @fudge.patch('six.moves.builtins.open')
+    def test_missing_key_ordbok_load(self, fudged_open):
+        fudged_open.is_callable().calls(fake_file_factory(fudged_config_files))
+        fudged_config_files_copy = deepcopy(fudged_config_files)
+        fudged_config_files_copy.update({
+            u'config.yml': u"""
+            FOO: 'ordbok_local_config'
+            """})
+        fudged_open.is_callable().calls(
+            fake_file_factory(fudged_config_files_copy))
+        with self.assertRaises(OrdbokMissingKeyException):
+            self.ordbok.load()
+
+    @fudge.patch('six.moves.builtins.open')
+    @mock.patch.dict('os.environ', patched_environ)
+    def test_missing_targeted_env_key_ordbok_load(self, fudged_open):
+        fudged_open.is_callable().calls(fake_file_factory(fudged_config_files))
+        fudged_config_files_copy = deepcopy(fudged_config_files)
+        fudged_config_files_copy.update({
+            u'config.yml': u"""
+            FOO: 'ordbok_env_config_not_there'
+            """})
+        fudged_open.is_callable().calls(
+            fake_file_factory(fudged_config_files_copy))
+        with self.assertRaises(OrdbokTargetedEnvKeyException):
+            self.ordbok.load()
+
+
+class OrdbokConfigFileTestCase(unittest.TestCase):
+    def setUp(self):
+        self.ordbok = Ordbok()
+        self.config_file = ConfigFile('config.yml')
+        self.config_file.init_config(self.ordbok)
+
+    def test_file_add_required_keys(self):
+        self.config_file.add_required_key('foo')
+        self.config_file.add_required_key('bar', 'baz')
+        self.assertIn('foo', self.config_file.required_keys)
+        self.assertIn('bar', self.config_file.required_keys)
+        self.assertNotIn('baz', self.config_file.required_keys)
+
+    def test_file_validate_yaml_content(self):
+        with self.assertRaises(TypeError):
+            self.config_file._validate_yaml_content(['foo', 'bar', 'baz'])
+        self.config_file._validate_yaml_content({'foos': ['foo', 'bar', 'baz']})
+
+    def test_file_validate_key(self):
+        with self.assertRaises(OrdbokLowercaseKeyException):
+            self.config_file._validate_key('foo')
+        self.config_file._validate_key('FOO')
+
+    def test_create_config_file(self):
+        with self.assertRaises(TypeError):
+            create_config_file(1)
+        with self.assertRaises(TypeError):
+            create_config_file({'foo': 'bar'})
+        with self.assertRaises(TypeError):
+            create_config_file(['foo', 'bar'])
+
 
 class OrdbokPrivateConfigFileTestCase(unittest.TestCase):
     def setUp(self):
@@ -158,6 +294,16 @@ class OrdbokPrivateConfigFileTestCase(unittest.TestCase):
         self.assertFalse(mock_load_yaml.called)
 
     @fudge.patch('ordbok.config_private.open_wrapper')
+    def test_ordbok_private_config_no_private_key(self, fudged_open):
+        self.ordbok['ENVIRONMENT'] = 'production'
+        fudged_config_files.update({
+            u'private_config.yml.private': 'foobarbaz',
+        })
+        fudged_open.is_callable().calls(fake_file_factory(fudged_config_files))
+        with self.assertRaises(OrdbokMissingPrivateKeyException):
+            self.ordbok.load()
+
+    @fudge.patch('ordbok.config_private.open_wrapper')
     @mock.patch.object(PrivateConfigFile, '_load_yaml')
     def test_ordbok_private_config_no_envs(
             self, fudged_open, mock_load_yaml):
@@ -167,6 +313,10 @@ class OrdbokPrivateConfigFileTestCase(unittest.TestCase):
         self.ordbok['ENVIRONMENT'] = 'production'
         self.ordbok.load()
         self.assertTrue(mock_load_yaml.called)
+
+    def test_ordbok_private_key(self):
+        self.ordbok['PRIVATE_KEY_ORDBOK'] = 'foobarbaz'
+        self.assertEqual(self.ordbok.private_file_key, 'foobarbaz')
 
 
 class OrdbokDefaultsTestCase(unittest.TestCase):

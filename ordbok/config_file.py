@@ -77,17 +77,19 @@ class ConfigFile(object):
     def _validate_nested_keys(self, d):
         for key, value in d.items():
             if isinstance(value, six.string_types):
-                if value.startswith(self.config.namespace):
+                if any(True for k in self.config_files_lookup.keys() if
+                       value.startswith(k)):
                     raise OrdbokNestedRequiredKeyException(value)
             if isinstance(value, dict):
-                for k, v in self._validate_nested_keys(value):
-                    yield
-            yield
+                self._validate_nested_keys(value)
+            pass
 
     def _process_key_value(self, key, value):
         if isinstance(value, dict):
             pass
         self._validate_key(key)
+        if isinstance(value, dict):
+            self._validate_nested_keys(value)
         referenced_config_file = self._referenced_config_file(key, value)
         if referenced_config_file:
             self.config_files_lookup[referenced_config_file].add_required_key(
