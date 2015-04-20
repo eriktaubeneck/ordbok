@@ -67,7 +67,7 @@ class ConfigFile(object):
         referenced_config_file = referenced_config_files[0]
 
         if referenced_config_file == self.keyword:
-            raise OrdbokSelfReferenceException(self)
+            raise OrdbokSelfReferenceException(key, self)
         elif self.config_files_lookup[referenced_config_file].loaded:
             raise OrdbokPreviouslyLoadedException(
                 self.config_files_lookup, referenced_config_file, self)

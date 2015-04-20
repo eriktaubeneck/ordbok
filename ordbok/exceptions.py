@@ -2,15 +2,35 @@ class OrdbokException(Exception):
     pass
 
 
-class OrdbokMissingConfigFileException(OrdbokException):
+class OrdbokKeyException(OrdbokException):
     def __init__(self, key, config_file):
         self.key = key
         self.config_file_path = config_file.config_file_path
 
+
+class OrdbokMissingConfigFileException(OrdbokKeyException):
     def __repr__(self):
         return ('{0} is required to be specified in {1} '
                 'but {1} was not registered with Ordbok'.format(
                     self.key, self.config_file_path))
+
+
+class OrdbokLowercaseKeyException(OrdbokKeyException):
+    def __repr__(self):
+        return '{} config key in {} must be uppercase.'.format(
+            self.key, self.config_filename)
+
+
+class OrdbokMissingKeyException(OrdbokKeyException):
+    def __repr__(self):
+        return ('{} config key should be specified in {} but was not found.'
+                ''.format(self.key, self.config_filename))
+
+
+class OrdbokSelfReferenceException(OrdbokKeyException):
+    def __repr__(self):
+        return ('Cannot require {} to be required in its own file ({}).'
+                ''.format(self.key, self.config_filename))
 
 
 class OrdbokAmbiguousConfigFileException(OrdbokException):
@@ -20,15 +40,6 @@ class OrdbokAmbiguousConfigFileException(OrdbokException):
     def __repr__(self):
         return ('Config file names are ambiguous. Please make them '
                 'distinct: {}'.format(self.referenced_config_files))
-
-
-class OrdbokSelfReferenceException(OrdbokException):
-    def __init__(self, config_file):
-        self.config_filename = config_file.filename
-
-    def __repr__(self):
-        return ('Cannot require {} required Ordbok config variables '
-                'in their own file.'.format(self.config_filename))
 
 
 class OrdbokPreviouslyLoadedException(OrdbokException):
@@ -44,16 +55,6 @@ class OrdbokPreviouslyLoadedException(OrdbokException):
                     self.previously_loaded_filename, self.current_filename))
 
 
-class OrdbokLowercaseKeyException(OrdbokException):
-    def __init__(self, key, config_file):
-        self.key = key
-        self.config_filename = config_file.filename
-
-    def __repr__(self):
-        return '{} config key in {} must be uppercase.'.format(
-            self.key, self.config_filename)
-
-
 class OrdbokNestedRequiredKeyException(OrdbokException):
     def __init__(self, value):
         self.value = value
@@ -61,13 +62,3 @@ class OrdbokNestedRequiredKeyException(OrdbokException):
     def __repr__(self):
         return ('Cannot specifiy {} required Ordbok config variable '
                 'in a nested config dictionary'.format(self.value))
-
-
-class OrdbokMissingKeyException(OrdbokException):
-    def __init__(self, key, config_file):
-        self.key = key
-        self.config_filename = config_file.filename
-
-    def __repr__(self):
-        return ('{} config key should be specified in {} but was not found.'
-                ''.format(self.key, self.config_filename))
