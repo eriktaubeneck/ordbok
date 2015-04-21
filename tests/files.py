@@ -55,3 +55,11 @@ def fake_file_factory(fudged_config_files):
         else:
             yield StringIO(content)
     return fake_file
+
+
+def fake_path_exists_factory(fudged_config_files):
+    @contextmanager
+    def fake_exists(filename):
+        file_ = fake_file_factory(fudged_config_files)(filename)
+        yield file_ is not None
+    return fake_exists

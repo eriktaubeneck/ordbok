@@ -15,12 +15,13 @@ from ordbok.exceptions import (
     OrdbokAmbiguousConfigFileException, OrdbokSelfReferenceException,
     OrdbokPreviouslyLoadedException, OrdbokNestedRequiredKeyException,
     OrdbokMissingKeyException, OrdbokMissingPrivateKeyException,
-    OrdbokTargetedEnvKeyException)
+    OrdbokTargetedEnvKeyException, OrdbokMissingPrivateConfigFile,
+    OrdbokMissingEncryptedPrivateConfigFile)
 
 
 from tests.files import (
     fudged_config_files, fudged_config_no_local_file,
-    patched_environ, fake_file_factory)
+    patched_environ, fake_file_factory, fake_path_exists_factory)
 
 
 class OrdbokTestCase(unittest.TestCase):
@@ -282,6 +283,95 @@ class OrdbokPrivateConfigFileTestCase(unittest.TestCase):
 
         self.assertEquals(self.ordbok['OAUTH_KEY'], 'super_secret_key')
         self.assertEquals(self.ordbok['OAUTH_SECRET'], 'even_secreter_secret')
+
+    @fudge.patch('ordbok.config_private.open_wrapper')
+    @fudge.patch('os.path.exists')
+    def test_ordbok_private_config_no_encrypted_file(
+            self, fudged_open, fudged_path_exists):
+        fudged_config_files_with_private = deepcopy(fudged_config_files)
+        fudged_config_files_with_private.update({
+            u'private_config.yml': u"""
+            OAUTH_KEY: 'super_secret_key'
+            OAUTH_SECRET: 'even_secreter_secret'
+            """,
+        })
+
+        # set directly instead of completely rewriting 'config.yml'
+        self.ordbok['PRIVATE_KEY_ORDBOK'] = 'foobarbaz'
+        self.private_config_file.init_config(self.ordbok)
+
+        fudged_open.is_callable().calls(
+            fake_file_factory(fudged_config_files_with_private))
+        fudged_path_exists.is_callable().calls(
+            fake_path_exists_factory(fudged_config_files_with_private))
+
+        self.ordbok['ENVIRONMENT'] = 'production'
+
+        with self.assertRaises(OrdbokMissingEncryptedPrivateConfigFile):
+            self.ordbok.load()
+
+    @fudge.patch('ordbok.config_private.open_wrapper')
+    @fudge.patch('os.path.exists')
+    def test_ordbok_private_config_no_file(
+            self, fudged_open, fudged_path_exists):
+        # set directly instead of completely rewriting 'config.yml'
+        self.ordbok['PRIVATE_KEY_ORDBOK'] = 'foobarbaz'
+        self.private_config_file.init_config(self.ordbok)
+
+        fudged_open.is_callable().calls(
+            fake_file_factory(fudged_config_files))
+        fudged_path_exists.is_callable().calls(
+            fake_path_exists_factory(fudged_config_files))
+
+        self.ordbok['ENVIRONMENT'] = 'production'
+
+        with self.assertRaises(OrdbokMissingPrivateConfigFile):
+            self.ordbok.load()
+
+    @fudge.patch('ordbok.config_private.open_wrapper')
+    @fudge.patch('os.path.exists')
+    def test_ordbok_private_config_load_decrypted(
+            self, fudged_open, fudged_path_exists):
+        fudged_config_files_with_private = deepcopy(fudged_config_files)
+        file_content = u"""
+            OAUTH_KEY: 'super_secret_key'
+            OAUTH_SECRET: 'even_secreter_secret'
+            """
+        fudged_config_files_with_private.update({
+            u'private_config.yml': file_content
+        })
+
+        # set directly instead of completely rewriting 'config.yml'
+        self.ordbok['PRIVATE_KEY_ORDBOK'] = 'foobarbaz'
+        self.private_config_file.init_config(self.ordbok)
+
+        fudged_open.is_callable().calls(
+            fake_file_factory(fudged_config_files_with_private))
+        fudged_path_exists.is_callable().calls(
+            fake_path_exists_factory(fudged_config_files_with_private))
+
+        self.ordbok['ENVIRONMENT'] = 'production'
+
+        decrypted_file = self.private_config_file._load_decrypted_file()
+        self.assertEqual(file_content, decrypted_file)
+
+    @fudge.patch('ordbok.config_private.open_wrapper')
+    @fudge.patch('os.path.exists')
+    def test_ordbok_private_config_load_decrypted_no_file(
+            self, fudged_open, fudged_path_exists):
+        # set directly instead of completely rewriting 'config.yml'
+        self.ordbok['PRIVATE_KEY_ORDBOK'] = 'foobarbaz'
+        self.private_config_file.init_config(self.ordbok)
+
+        fudged_open.is_callable().calls(
+            fake_file_factory(fudged_config_files))
+        fudged_path_exists.is_callable().calls(
+            fake_path_exists_factory(fudged_config_files))
+
+        self.ordbok['ENVIRONMENT'] = 'production'
+
+        with self.assertRaises(OrdbokMissingPrivateConfigFile):
+            self.private_config_file._load_decrypted_file()
 
     @fudge.patch('ordbok.config_private.open_wrapper')
     @mock.patch.object(PrivateConfigFile, '_load_yaml')

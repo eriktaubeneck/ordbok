@@ -77,6 +77,21 @@ class OrdbokTargetedEnvKeyException(OrdbokException):
         self.env_key = env_key
 
     def __repr__(self):
-        return (
-            '{} config key should be specified in the environment as '
-            '{} but was not found.'.format(self.key, self.env_key))
+        return ('{} config key should be specified in the environment as '
+                '{} but was not found.'.format(self.key, self.env_key))
+
+
+class OrdbokMissingPrivateConfigFile(OrdbokException):
+    def __init__(self, config_file):
+        self.config_file_path = config_file.config_file_path
+
+    def __repr__(self):
+        return ("Private config file '{0}' not found. Please create and run "
+                "`ordbok encrypt {0}`.".format(self.config_file_path))
+
+
+class OrdbokMissingEncryptedPrivateConfigFile(OrdbokMissingPrivateConfigFile):
+    def __repr__(self):
+        return ("Encrypted version of private config file '{0}' not found. "
+                "Please run `ordbok encrypt {0}`.".format(
+                    self.config_file_path))
