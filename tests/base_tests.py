@@ -438,6 +438,18 @@ class FlaskOrdbokTestCase(OrdbokTestCase):
         self.app = Flask(os.getcwd())  # fudged files think they are in cwd
         self.ordbok = FlaskOrdbok(app=self.app)
 
+    @fudge.patch('six.moves.builtins.open')
+    def test_flask_config_update(self, fudged_open):
+        fudged_open.is_callable().calls(fake_file_factory(fudged_config_files))
+        self.ordbok.load()
+        self.app.config.update(self.ordbok)
+        self.assertEquals(self.app.config['ENVIRONMENT'], 'development')
+        self.assertEquals(self.app.config['SECRET_KEY'], 'keep out!')
+        self.assertTrue(self.app.config['DEBUG'])
+        self.assertEquals(self.app.config['SQLALCHEMY_DATABASE_URL'],
+                          'sqlite:///tmp/database.db')
+        self.assertTrue(self.app.config['SQLALCHEMY_ECHO'])
+
     @mock.patch.object(Flask, 'run')
     def test_flask_reloader(self, fudged_flask_run):
         self.ordbok.load()
