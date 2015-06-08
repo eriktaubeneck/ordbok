@@ -2,10 +2,12 @@
 
 [![Build Status](https://travis-ci.org/eriktaubeneck/ordbok.svg?branch=master)](https://travis-ci.org/eriktaubeneck/ordbok)
 [![Coverage Status](https://img.shields.io/coveralls/eriktaubeneck/ordbok.svg)](https://coveralls.io/r/eriktaubeneck/ordbok)
+[![Code Climate](https://codeclimate.com/github/eriktaubeneck/ordbok/badges/gpa.svg)](https://codeclimate.com/github/eriktaubeneck/ordbok)
 [![Documentation Status](https://readthedocs.org/projects/ordbok/badge/?version=latest)](https://readthedocs.org/projects/ordbok/?badge=latest)
-[![Latest Version](https://pypip.in/version/ordbok/badge.png)](https://pypi.python.org/pypi/ordbok/)
-[![Downloads](https://pypip.in/download/ordbok/badge.png)](https://pypi.python.org/pypi/ordbok/)
-[![License](https://pypip.in/license/ordbok/badge.png)](https://pypi.python.org/pypi/ordbok/)
+[![PyPI](https://img.shields.io/pypi/v/ordbok.svg)](https://pypi.python.org/pypi/ordbok/)
+[![Wheels](https://img.shields.io/pypi/wheel/ordbok.svg)](https://pypi.python.org/pypi/ordbok/)
+[![Downloads](https://img.shields.io/pypi/dm/ordbok.svg)](https://pypi.python.org/pypi/ordbok/)
+[![License](https://img.shields.io/pypi/l/ordbok.svg)](https://pypi.python.org/pypi/ordbok/)
 
 As your application grows, configuration can get a bit chaotic, especially if you have multiple versions (local, deployed, staging, etc.) Ordbok brings order to that chaos.
 
