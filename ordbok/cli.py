@@ -1,8 +1,8 @@
 from __future__ import print_function
 import os
 import argparse
-from ordbok import Ordbok
-from ordbok.config_private import PrivateConfigFile
+from .ordbok import Ordbok
+from .config_private import PrivateConfigFile
 
 
 def main():

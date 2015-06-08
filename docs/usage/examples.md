@@ -4,15 +4,20 @@
 `app/__init__.py`:
 
 ```
-from ordbok.flask_helper import Flask
+from ordbok.flask_helper import FlaskOrdbok
+
+ordbok = FlaskOrdbok()
 
 def create_app():
     app = Flask(__name__)
-    app.config.load()
+    ordbok.init_app(app)
+    ordbok.load()
+    app.config.update(ordbok)
     return app
 
 if __name__ == "__main__":
     app = create_app()
+    ordbok.app_run(app)
 
 ```
 `app/config/config.yml`:

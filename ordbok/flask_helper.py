@@ -1,46 +1,22 @@
-from . import Ordbok
-
-from flask import Flask as BaseFlask, Config as BaseConfig
+from .ordbok import Ordbok
 
 
-class OrdbokFlaskConfig(BaseConfig, Ordbok):
-    """
-    Extented version of the builtin Flask `Config` that inherits
-    a `from_yaml` method from Ordbok so that config varibables
-    can be defined there.
-    """
-    def __init__(self, *args, **kwargs):
-        self.set_defaults(**kwargs)
-        return super(OrdbokFlaskConfig, self).__init__(*args, **kwargs)
+class FlaskOrdbok(Ordbok):
+    def __init__(self, app=None, **kwargs):
+        if app:
+            self.init_app(app)
+        return super(FlaskOrdbok, self).__init__(**kwargs)
 
-    @property
-    def config_cwd(self):
-        return self.root_path
+    def init_app(self, app):
+        if not hasattr(app, 'extensions'):
+            app.extensions = {}
+        app.extensions['ordbok'] = self
+        self._root_path = app.config.root_path
 
-
-def make_config(self, instance_relative=False):
-    root_path = self.root_path
-    if instance_relative:
-        root_path = self.instance_path
-    return self.config_class(root_path, self.default_config)
-
-
-def run(self, *args, **kwargs):
-    if self.config_class is not OrdbokFlaskConfig:
-        raise Exception(
-            'Cannot override Flask.run() without using OrdbokFlaskConfig '
-            'as Flask.config_class.')
-    if kwargs.get('use_reloader') is not False and self.debug:
-        kwargs.setdefault('extra_files', [])
-        kwargs['extra_files'].extend(self.config.config_file_names)
-    return super(Flask, self).run(*args, **kwargs)
-
-
-class Flask(BaseFlask):
-    """
-    Extened version of `Flask` that implements the custom config class
-    defined above.
-    """
-    config_class = OrdbokFlaskConfig
-    make_config = make_config
-    run = run
+    def app_run(self, app, *args, **kwargs):
+        if kwargs.get('use_reloader') is not False and app.debug:
+            extra_files = kwargs.get('extra_files', [])
+            extra_files.extend(self.config_file_names)
+            if extra_files:
+                kwargs['extra_files'] = extra_files
+        return app.run(*args, **kwargs)

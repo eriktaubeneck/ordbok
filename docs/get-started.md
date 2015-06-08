@@ -18,46 +18,27 @@ Then, in your app root path, create a directory `config` and add two files `conf
 
 # Quickstart with Flask
 
-In the file in which you initialize your `Flask` object, replace
 
 ```
-from flask import Flask
+from ordbok.flask_helper import FlaskOrdbok
+
+app = Flask(__name__)
+ordbok = FlaskOrdbok(app)
+ordbok.load()
+app.config.update(ordbok)
+```
+(or similar depending upon your setup).
+
+For your local development app, you can replace
+
+```
+app.run()
 ```
 
 with
 
 ```
-from ordbok.flask_helper import Flask
+ordbok.app_run(app)
 ```
 
-and update
-
-```
-app = Flask(__name__)
-```
-
-to
-
-```
-app = Flask(__name__)
-app.config.load()
-```
-(or similar depending upon your setup).
-
-Then, in your app root path, create a directory `config` and add two files `config.yml` and `local_config.yml`. See [Usage](#usage) for more detailed usage and [Example](#examples) for an example YAML configuration.
-
-This updated version of `Flask` also monitors your config files for changes and triggers the reloader when running `app.run()` in debug mode.
-
-The `Flask` object here is whatever version you have install locally (`ordbok.flask_helper` imports `Flask` directly). Regardless, importing `Flask` from `ordbok` does feel a little weird, and if you prefer, you can installed do something to the effect of:
-
-```
-from flask import Flask
-from ordbok.flask_helper import OrdbokFlaskConfig, make_config, run
-Flask.config_class = OrdbokFlaskConfig
-Flask.make_config = make_config
-Flask.run = run
-app = Flask(__name__)
-app.config.load()
-```
-
-If you look at `ordbok.flask_helper`, this is all that happens to the `Flask` object that's importable. It's very importand that `Flask.make_config` is overridden before the `app` is initialized as `make_config` is called from the initializer.
+This updated app runner monitors your config files for changes and triggers the reloader when running `app.run()` in debug mode, just like with code changes.

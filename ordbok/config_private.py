@@ -2,7 +2,9 @@ import os
 import six
 import yaml
 import simplecrypt
-from ordbok.config_file import ConfigFile
+from .config_file import ConfigFile
+from .exceptions import (
+    OrdbokMissingPrivateConfigFile, OrdbokMissingEncryptedPrivateConfigFile)
 
 
 def open_wrapper(*args, **kwargs):
@@ -16,7 +18,9 @@ def open_wrapper(*args, **kwargs):
 class PrivateConfigFile(ConfigFile):
     def _load_yaml(self):
         content = self._load_and_decrypt_file()
-        return yaml.load(content)
+        c = yaml.load(content)
+        self._validate_yaml_content(c)
+        return c
 
     def _load_encrypted_file(self):
         try:
@@ -24,22 +28,16 @@ class PrivateConfigFile(ConfigFile):
                 return f.read()
         except IOError:
             if os.path.exists(self.config_file_path):
-                raise Exception(
-                    "Encrypted version of private config file '{0}' "
-                    "not found. Please run `ordbok encrypt {0}`."
-                    "".format(self.config_file_path))
+                raise OrdbokMissingEncryptedPrivateConfigFile(self)
             else:
-                raise Exception(
-                    "Private config file '{0}' not found. "
-                    "Please create and run `ordbok encrypt {0}`."
-                    "".format(self.config_file_path))
+                raise OrdbokMissingPrivateConfigFile(self)
 
     def _load_decrypted_file(self):
         try:
             with open_wrapper(self.config_file_path, 'r+') as f:
                 return f.read()
         except IOError:
-            raise Exception("{} not found.".format(self.config_file_path))
+            raise OrdbokMissingPrivateConfigFile(self)
 
     def _save_encrypted_file(self):
         content = self._load_decrypted_file()
