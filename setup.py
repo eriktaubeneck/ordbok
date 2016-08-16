@@ -9,7 +9,7 @@ from setuptools import setup
 
 setup(
     name='ordbok',
-    version='0.1.8',
+    version='0.1.9',
     packages=['ordbok'],
     url='http://github.com/eriktaubeneck/ordbok',
     license='MIT',
@@ -23,7 +23,8 @@ setup(
     platforms='any',
     install_requires=[
         'pyyaml >=3.0, <4.a0',
-        'six>= 1.9.0, <2.a0'
+        'six>= 1.9.0, <2.a0',
+        'simple-crypt>=4.0.0, <5.a0'
     ],
     entry_points="""
     [console_scripts]
