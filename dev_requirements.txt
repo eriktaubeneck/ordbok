@@ -1,4 +1,4 @@
-Flask==0.10.1
+Flask==1.0
 PyYAML==3.11
 coverage==3.7.1
 fudge==1.0.3
