@@ -1,5 +1,5 @@
 Flask==0.10.1
-PyYAML==3.11
+PyYAML==5.4
 coverage==3.7.1
 fudge==1.0.3
 mock==1.0.1
